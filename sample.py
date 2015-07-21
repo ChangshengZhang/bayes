@@ -304,6 +304,7 @@ def UpdateTheta(m,alpha_theta,alpha_theta_sigma,alpha_hat,alpha_hat_sigma,iterNu
 	xi_X = stats.norm(loc = xi_i,scale = np.dot(s_xi_old,S_xi))
 	xi_i_1 = xi_X.rvs(1)
 	xi_sigma =[np.log(lambda_sigma_old),np.log(u_sigma_old),np.log(rou_sigma_old)-np.log(1-rou_sigma_old)]
+
 	S_xi_sigma = np.cov(np.array(xi_sigma_old),rowvar= False)
 	xi_sigma_1 = stats.norm(loc = xi_sigma,scale =np.dot(s_xi_sigma_old,S_xi_sigma)).rvs(1)
 
@@ -321,29 +322,31 @@ def UpdateTheta(m,alpha_theta,alpha_theta_sigma,alpha_hat,alpha_hat_sigma,iterNu
 
 	if lambda_i_new > lambda_i_old:
 		temp = stats.gamma.rvs(lambda_i_new-lambda_i_old,lambda_i_new/u_i_new,size=1)
-		phi_new.append(lambda_i_old*u_i_new/(lambda_i_new*u_i_old)*phi_old[0]+temp)
+		phi_new.append(lambda_i_old*u_i_new/(lambda_i_new*u_i_old)*phi_old[0]+temp[0])
 	else:
 		temp = stats.bernoulli.rvs(lambda_i_old-lambda_i_new,loc =lambda_i_new,size=1)
-		phi_new.append(lambda_i_old*u_i_new/(lambda_i_new*u_i_old)*phi_old[0]*temp)
+		phi_new.append(lambda_i_old*u_i_new/(lambda_i_new*u_i_old)*phi_old[0]*temp[0])
 
-	for t in range(len(phi_old)):
+
+
+	for t in range(min(len(phi_old),len(k_i_old))):
 
 		if rou_divide_new*phi_new[t]*lambda_i_new/u_i_new > rou_divide_old*phi_old[t]*lambda_i_old/u_i_old:
 			k_X= stats.poisson(rou_divide_new*phi_new[t]*lambda_i_new/u_i_new -rou_divide_old*phi_old[t]*lambda_i_old/u_i_old)
 			temp_sample = k_X.rvs(1)
-			k_i_new.append(k_i_old[t]+temp_sample)
+			k_i_new.append(k_i_old[t]+temp_sample[0])
 		else:
 			k_X = stats.binom.rvs(k_i_old[t],rou_divide_new*phi_new[t]*lambda_i_new/u_i_new/(rou_divide_old*phi_old[t]*lambda_i_old/u_i_old),size =1)
-			k_i_new.append(k_X)
+			k_i_new.append(k_X[0])
 
-		if t>0:
+		if t<len(phi_old)-1:
 			if lambda_i_new+k_i_new[t-1] > lambda_i_old + k_i_old[t-1]:
 				temp_sample = stats.gamma.rvs(lambda_i_new+k_i_new[t-1]-lambda_i_old-k_i_old[t-1],lambda_i_new/u_i_new*(1+rou_divide_new),size=1)
 
-				phi_new.append(lambda_i_new*u_i_new*(1+rou_divide_old)/(lambda_i_old*u_i_old*(1+rou_divide_new))+temp_sample)
+				phi_new.append(lambda_i_new*u_i_new*(1+rou_divide_old)/(lambda_i_old*u_i_old*(1+rou_divide_new))+temp_sample[0])
 			else:
 				temp = stats.bernoulli.rvs(lambda_i_old+k_i_old[t-1]-lambda_i_new-k_i_new[t-1],loc =lambda_i_new+k_i_new[t-1],size=1)
-				phi_new.append(lambda_i_new*u_i_new*(1+rou_divide_old)/(lambda_i_old*u_i_old*(1+rou_divide_new))*temp)
+				phi_new.append(lambda_i_new*u_i_new*(1+rou_divide_old)/(lambda_i_old*u_i_old*(1+rou_divide_new))*temp[0])
 
 	sigma_new = []
 	k_sigma_new =[]
@@ -354,35 +357,35 @@ def UpdateTheta(m,alpha_theta,alpha_theta_sigma,alpha_hat,alpha_hat_sigma,iterNu
 
 	if lambda_sigma_new >lambda_sigma_old:
 		temp = stats.gamma.rvs(lambda_sigma_new-lambda_sigma_old,lambda_sigma_new/u_sigma_new,size=1)
-		sigma_new.append(lambda_sigma_old*u_sigma_new/(lambda_sigma_new*u_sigma_old)*sigma_old[0]+temp)
+		sigma_new.append(lambda_sigma_old*u_sigma_new/(lambda_sigma_new*u_sigma_old)*sigma_old[0]+temp[0])
 
 	else:
 		temp = stats.bernoulli.rvs(lambda_sigma_old-lambda_sigma_new,loc = lambda_sigma_new,size =1)
-		sigma_new.append(lambda_sigma_old*u_sigma_new/(lambda_sigma_new*u_sigma_old)*sigma_old[0]*temp)
+		sigma_new.append(lambda_sigma_old*u_sigma_new/(lambda_sigma_new*u_sigma_old)*sigma_old[0]*temp[0])
 
-	for t in range(len(sigma_old)):
+	for t in range(min(len(sigma_old),len(k_sigma_old))):
 		if rou_sigma_divide_new*phi_new[t]*lambda_sigma_new/u_sigma_new >rou_sigma_divide_old*phi_old[t]*lambda_sigma_old/u_sigma_old:
 			temp = stats.poisson.rvs(rou_sigma_divide_new*phi_new[t]*lambda_sigma_new/u_sigma_new-rou_sigma_divide_old*phi_old[t]*lambda_sigma_old/u_sigma_old,size=1)
-			k_sigma_new.append(k_sigma_old[t]+temp)
+			k_sigma_new.append(k_sigma_old[t]+temp[0])
 		else:
-			temp = stats.binom.rvs(k_sigma_old,rou_sigma_divide_new*phi_new[t]*lambda_sigma_new/u_sigma_new/(rou_sigma_divide_old*phi_old[t]*lambda_sigma_old/u_sigma_old),size=1)
-			k_sigma_new.append(temp)
+			temp = stats.binom.rvs(k_sigma_old[t],rou_sigma_divide_new*phi_new[t]*lambda_sigma_new/u_sigma_new/(rou_sigma_divide_old*phi_old[t]*lambda_sigma_old/u_sigma_old),size=1)
+			k_sigma_new.append(temp[0])
 
-		if t>0:
+		if t<len(sigma_old)-1:
 			if lambda_sigma_new+k_sigma_new[t-1]>lambda_sigma_old+k_sigma_old[t-1]:
 				temp = stats.gamma.rvs(lambda_sigma_new-lambda_sigma_old+k_sigma_new[t-1]-k_sigma_old[t-1],lambda_sigma_new/u_sigma_new*(1+rou_sigma_divide_new),size=1)
-				sigma_new.append(temp+lambda_sigma_new*u_sigma_new*(1+rou_sigma_divide_old)/(lambda_sigma_old*u_sigma_old*(1+rou_sigma_divide_new)))
+				sigma_new.append(temp[0]+lambda_sigma_new*u_sigma_new*(1+rou_sigma_divide_old)/(lambda_sigma_old*u_sigma_old*(1+rou_sigma_divide_new)))
 			else:
 				temp = stats.bernoulli.rvs(lambda_sigma_old+k_sigma_old[t-1]-lambda_sigma_new-k_sigma_new[t-1],loc=lambda_sigma_new+k_sigma_new[t-1],size=1)
-				sigma_new.append(temp*lambda_sigma_new*u_sigma_new*(1+rou_sigma_divide_old)/(lambda_sigma_old*u_sigma_old*(1+rou_sigma_divide_new)))
+				sigma_new.append(temp[0]*lambda_sigma_new*u_sigma_new*(1+rou_sigma_divide_old)/(lambda_sigma_old*u_sigma_old*(1+rou_sigma_divide_new)))
 
 	# step 4
 
 
 
 	# step 5
-	ap = 0
-	ap_sigma = 0
+	ap = 0.5
+	ap_sigma = 0.5
 
 
 
@@ -391,15 +394,40 @@ def UpdateTheta(m,alpha_theta,alpha_theta_sigma,alpha_hat,alpha_hat_sigma,iterNu
 	xi_sigma_new = []
 	xi_ap = stats.binom(1,ap)
 	temp = xi_ap.rvs(1)
+	# update
 	if temp==0:
-		xi_new = xi_i_1
+		for ii in range(len(xi_i_1)):
+
+			xi_new.append(xi_i_1[ii])
+
+		for ii in range(len(phi_new)):
+			phi_old[ii]=phi_new[ii]
+
+		for ii in range(len(k_i_new)):
+			k_i_old[ii] = k_i_new[ii]
+
+	else:
+		for ii in range(len(xi_i)):
+			xi_new.append(xi_i[ii])
 
 	sigma_ap = stats.binom(1,ap_sigma)
 	temp =sigma_ap.rvs(1)
 	if temp ==0:
-		xi_sigma_new = xi_sigma_1
+		for ii in range(len(xi_sigma_1)):
+			xi_sigma_new.append(xi_sigma_1[ii])
 
+		for ii in range(len(sigma_new)):
+			sigma_old[ii]=sigma_new[ii]
 
+		for ii in range(len(k_sigma_new)):
+			k_sigma_old[ii]=k_sigma_new[ii]
+
+	else:
+		for ii in range(len(xi_sigma)):
+			xi_sigma_new.append(xi_sigma[ii])
+
+	xi_old.append(xi_new)
+	xi_sigma_old.append(xi_sigma_new)
 
 	# step 7
 	s_xi_new= []
@@ -408,11 +436,15 @@ def UpdateTheta(m,alpha_theta,alpha_theta_sigma,alpha_hat,alpha_hat_sigma,iterNu
 
 		temp = np.exp(np.log(s_xi_old[i])+iterNum**(-1.0*eta)*(alpha_theta-alpha_hat))
 		s_xi_new.append(temp)
+	for i in range(len(s_xi_sigma_old)):
 
-		temp = np.exp(np.log(s_xi_sigma_old[i])+iterNum**(-1.0*eta_sigma)*(alpha_theta_sigma-alpha_hat_sigma)
+		temp = np.exp(np.log(s_xi_sigma_old[i])+iterNum**(-1.0*eta_sigma)*(alpha_theta_sigma-alpha_hat_sigma))
 		s_xi_sigma_new.append(temp)
 
 
+
+
+	return xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new
 
 
 
@@ -532,6 +564,21 @@ if __name__ =='__main__':
 	#update k_sigma
 	z_sigma_old = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
 
+	#2.5 update
+
+	m =5
+	alpha_theta = 0.97
+	alpha_theta_sigma = 0.97
+	alpha_hat = 0.97
+	alpha_hat_sigma = 0.97
+	eta_sigma = 0.75
+
+	xi_old = [[1,1,1,1]]
+	xi_sigma_old = [[1,1,1]]
+	s_xi_old = [1,1,1,1]
+	s_xi_sigma_old = [1,1,1]
+
+
 
 	# update U_star
 	u_star_old = 2
@@ -549,6 +596,8 @@ if __name__ =='__main__':
 
 
 	# run sample
+	print "begin \n"
+
 	phi_new, tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta_old,u,rou,varphi,iterNum,eta,alphi_phi_old,T)
 	k_new, z_new = UpdateK(k_old,z_old,T,lambda_old,rou,u,phi_new,alpha,iterNum,eta)
 
@@ -558,6 +607,20 @@ if __name__ =='__main__':
 	k_sigma_new,z_sigma_new= UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_square,iterNum,eta,alpha,T)
 
 
+	#2.5
+	xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new = UpdateTheta(m,alpha_theta,alpha_theta_sigma,alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,
+	                                                          list(np.sqrt(sigma_square)),k_sigma_new,beta_old,lambda_old,u,rou,varphi,xi_old,s_xi_old,
+	                                                          lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new)
+	#还原 xi 到变量中
+	lambda_new = np.exp(xi_new[0])
+	u_new = np.exp(xi_new[1])
+	rou_new = np.exp()
+
+	print xi_new
+	print "\n"
+	print xi_sigma_new
+
+
 	beta_new = UpdateBeta(phi_new,varphi,T)
 
 	# u_i 不等于 u，u_i是2.5得到的
@@ -565,7 +628,8 @@ if __name__ =='__main__':
 
 	lambda_star_new, tao_lambda_star_new = UpdateLambda(lambda_star,tao,s_star,u_star,m,u_i,eta,alpha,iterNum)
 
-	print lambda_star_new
-	print tao_lambda_star_new
+	#print lambda_star_new
+	#print tao_lambda_star_new
 
+	print "\nfinished!\n"
 
