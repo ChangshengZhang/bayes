@@ -650,9 +650,63 @@ if __name__ =='__main__':
     #初始值
     T = 200
     #phi_old tao_phi_old 是二维数组,维度和x一样
+    m = 5
+    #x 是6＊T的矩阵，第一行全为1
+    temp_x_list= []
+    for ii in range(T):
+        mul_var = stats.multivariate_normal(mean=[0,0,0,0,0],cov=np.identity(5))
+        temp_x = [1]
+        mul_var_rvs = mul_var.rvs(1)
+        for jj in range(len(mul_var_rvs)):
+            temp_x.append(mul_var_rvs[jj])
+        temp_x_list.append(temp_x)
+    x = map(list,zip(*temp_x_list))
+    beta_0 = [0]
+    beta_1 = [0]
+    beta_2 = [stats.norm.rvs(loc=2,scale=0.5,size=1)]
+    beta_3 = [0]
+    beta_4 = [0]
+    beta_5 = [0]
+    for ii in range(T-1):
+        beta_0.append(0)
+        beta_1.append(0.97*beta_1[-1]+stats.norm.rvs(loc=2,scale=0.5,size=1))
+        if ii <99:
+            beta_2.append(0.97*beta_2[-1]+stats.norm.rvs(loc=0,scale=0.5,size=1))
+        else:
+            beta_2.append(0)
+        if (t>=20 and t<=49)or (t>=120 and t<=149):
+            beta_3.append(-2)
+        else:
+            beta_3.append(0)
+        beta_4.append(0)
+        beta_5.append(0)
+    beta= [beta_0,beta_1,beta_2,beta_3,beta_4,beta_5]
+
+    tao_phi_old = 0.3
+    phi_old_temp = [[1,1,1,1,1]]
+    k_old_temp = []
+    k_per_row = []
+    for jj in range(m):
+        k_per_row.append(stats.gamma,rvs(rou_old[jj]*lambda_old*phi_per_row[jj]/(u_old[jj]*(1-rou_old[jj]))))
+    k_old_temp.append(k_per_row)
+    for ii in range(1,T):
+        phi_per_row = []
+        k_per_row = []
+        for jj in range(m):
+            phi_per_row.append(stats.gamma.rvs(lambda_old+k_old_temp[ii-1][jj]),lambda_old/(u_old[jj]*(1-rou_old[jj])))
+            k_per_row.append(stats.gamma,rvs(rou_old[jj]*lambda_old*phi_per_row[jj]/(u_old[jj]*(1-rou_old[jj]))))
+        phi_old_temp.append(phi_per_row)
+        k_old_temp.append(k_per_row)
+    phi_old = map(list,zip(*phi_old_temp))
+    k_old = map(list,zip(*k_old_temp))
+
+        
+    
+    lambda_old = 2
+            
+
+
     phi_old = [[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1]]
-    tao_phi_old = [[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],
            [1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1]]
     lambda_old = [1,1,1,1,1,1,1,1,1,1]
     k_old = [[2,1,4,1,2,1,4,1,1,1],[2,1,4,1,2,1,4,1,1,1],[2,1,4,1,2,1,4,1,1,1],[2,1,4,1,2,1,4,1,1,1],
