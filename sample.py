@@ -661,17 +661,18 @@ if __name__ =='__main__':
             temp_x.append(mul_var_rvs[jj])
         temp_x_list.append(temp_x)
     x = map(list,zip(*temp_x_list))
+    #beta
     beta_0 = [0]
     beta_1 = [0]
-    beta_2 = [stats.norm.rvs(loc=2,scale=0.5,size=1)]
+    beta_2 = [stats.norm.rvs(loc=2,scale=0.5,size=1)[0]]
     beta_3 = [0]
     beta_4 = [0]
     beta_5 = [0]
     for ii in range(T-1):
         beta_0.append(0)
-        beta_1.append(0.97*beta_1[-1]+stats.norm.rvs(loc=2,scale=0.5,size=1))
+        beta_1.append(0.97*beta_1[-1]+stats.norm.rvs(loc=2,scale=0.5,size=1)[0])
         if ii <99:
-            beta_2.append(0.97*beta_2[-1]+stats.norm.rvs(loc=0,scale=0.5,size=1))
+            beta_2.append(0.97*beta_2[-1]+stats.norm.rvs(loc=0,scale=0.5,size=1)[0])
         else:
             beta_2.append(0)
         if (t>=20 and t<=49)or (t>=120 and t<=149):
@@ -682,30 +683,108 @@ if __name__ =='__main__':
         beta_5.append(0)
     beta= [beta_0,beta_1,beta_2,beta_3,beta_4,beta_5]
 
+    lambda_old = 2
+    alpha_hat = 0.3
+    sigma = 1
+    #y
+    y= []
+    for ii in range(T):
+        y_ii = stats.norm.rvs(scale =sigma ,size=1)[0]
+        for jj in range(m+1):
+            y_ii = y_ii + x[jj][ii]*beta[jj][ii]
+        y.append(y_ii)
+    # u,rou,lambda,varphi, lambda_star,u_star
+    u = []
+    s_star = 0.1
+    b_star = 0.1
+    u_star = []
+    lambda_star = []
+    lambda_old = []
+    varphi_old = []
+    rou_old = []
+    for ii in range(m+1):
+        temp_lambda = stats.expon.rvs(scale = s_star,size =1 )[0]
+        lambda_star.append(temp_lambda)
+        flag = 1
+        cont = 1000
+        while flag:
+            u_ranom =random.uniform(0,1)
+            v_random = stats.gamma.rvs(1,size=1)[0]
+            fy = (v_random+2*b_star)**(-3)
+            gy = np.exp(-1.0*v_random)
+            if u_ranom <=fy/(cont*gy):
+                u_star.append(v_random)
+                flag = 0
+                break
+            else:
+                flag =1 
+    for ii in range(m+1):
+        temp_u = stats.gamma.rvs(lambda_star[ii],lambda_star[ii]/u_star[ii])[0]
+        u.append(temp_u)
+    for ii in range(m+1):
+        cont =1000
+        while flag:
+            u_ranom = random.uniform(0,1)
+            v_random = stats.gamma.rvs(1,size=1)[0]
+            fy = v_random*(0.5+v_random)**(-4)
+            gy = np.exp(-1.0*v_random)
+            if u_ranom <=fy/(cont*gy):
+                lambda_old.append(v_random)
+                flag = 0
+                break
+            else:
+                flag =1
+    #这个分布有问题，目前还没写
+    for ii in range(m+1):
+        varphi_old.append(stats.)
+        rou_old.append(stats.)
+    lambda_sigma = stats.gamma.rvs(3,1)[0]
+    u_sigma = 0
+    cont =1000
+    flag = 1
+    while flag:
+        u_random = random.uniform(0,1)
+        v_random = stats.gamma.rvs(1,size=1)[0]
+        fy = (1+v_random)**(-1.5)
+        gy = np.exp(-1.0*v_random)
+        if u_random <= fy/(cont*gy):
+            u_sigma = v_random
+            break
+        else:
+            flag =1
+    rou_sigma = stats.
+
+
+    #生成phi,tao,k,z
     tao_phi_old = 0.3
-    phi_old_temp = [[1,1,1,1,1]]
+    phi_old_temp = []
     k_old_temp = []
     k_per_row = []
-    for jj in range(m):
-        k_per_row.append(stats.gamma,rvs(rou_old[jj]*lambda_old*phi_per_row[jj]/(u_old[jj]*(1-rou_old[jj]))))
+    z_old = 0.3 
+    
+    for ii in range(m+1):
+        phi_per_row.append(stats.gamma.rvs(lambda_old[ii],lambda_old[ii]/u[ii]))
+    phi_old_temp.append(phi_per_row)
+
+    for jj in range(m+1):
+        k_per_row.append(stats.gamma.rvs(rou_old[jj]*lambda_old*phi_old_temp[0][jj]/(u_old[jj]*(1-rou_old[jj])))[0])
     k_old_temp.append(k_per_row)
+    
     for ii in range(1,T):
         phi_per_row = []
         k_per_row = []
-        for jj in range(m):
-            phi_per_row.append(stats.gamma.rvs(lambda_old+k_old_temp[ii-1][jj]),lambda_old/(u_old[jj]*(1-rou_old[jj])))
-            k_per_row.append(stats.gamma,rvs(rou_old[jj]*lambda_old*phi_per_row[jj]/(u_old[jj]*(1-rou_old[jj]))))
+        for jj in range(1+m):
+            phi_per_row.append(stats.gamma.rvs(lambda_old+k_old_temp[ii-1][jj],lambda_old/(u_old[jj]*(1-rou_old[jj])))[0])
+            k_per_row.append(stats.gamma.rvs(rou_old[jj]*lambda_old*phi_per_row[jj]/(u_old[jj]*(1-rou_old[jj])))[0])
         phi_old_temp.append(phi_per_row)
         k_old_temp.append(k_per_row)
     phi_old = map(list,zip(*phi_old_temp))
     k_old = map(list,zip(*k_old_temp))
 
-        
     
-    lambda_old = 2
-            
-
-
+    
+    
+    
     phi_old = [[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],
            [1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1]]
     lambda_old = [1,1,1,1,1,1,1,1,1,1]
