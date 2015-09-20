@@ -12,11 +12,11 @@ import math
 import random
 import copy
 
-# phi、tao、k，beta、alpha 是二维数组
+# phi、tao、k，beta 是二维数组
 # lambda、u、rou、varphi是一维数组
-# iterNum 是迭代次数，eta,T 为常数
+# iterNum 是迭代次数，eta,T,alpha_hat 为常数
 def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_list,u_list,rou_list,varphi_list,
-      iterNum,eta,alpha_phi_old_list,T):
+      iterNum,eta,alpha_phi_hat,T):
     print "begin a new iteration:"
 
     #二维数组
@@ -33,7 +33,6 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         u = copy.deepcopy(u_list[ii])
         rou = copy.deepcopy(rou_list[ii])
         varphi = copy.deepcopy(varphi_list[ii])
-        alpha_phi_old = copy.deepcopy(alpha_phi_old_list[ii])
 
         #当前下标为 ii时 的临时数组数据
         phi_new = []
@@ -72,7 +71,7 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         phi_new.append(phi_i1_new)
 
         # step 4
-        log_tao_i1_new = np.log(tao_phi_old[0])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_old[0])
+        log_tao_i1_new = np.log(tao_phi_old[0])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_hat)
         tao_phi_new.append(np.exp(log_tao_i1_new))
 
         t =1
@@ -112,7 +111,7 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
             phi_new.append(phi_it_new)
 
             # step 4
-            log_tao_it_new = np.log(tao_phi_old[t])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_old[t])
+            log_tao_it_new = np.log(tao_phi_old[t])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_hat)
             tao_phi_new.append(np.exp(log_tao_it_new))
 
             t = t+1
@@ -151,7 +150,7 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         phi_new.append(phi_it_new)
 
         # step 4
-        log_tao_it_new = np.log(tao_phi_old[t])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_old[t])
+        log_tao_it_new = np.log(tao_phi_old[t])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_hat)
         tao_phi_new.append(np.exp(log_tao_it_new))
 
         phi_new_list.append(phi_new)
@@ -162,9 +161,9 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
 
 
 # k,z,phi,是二维数组
-# lambda, rou, u,alpha 是一维数组
-# T,iterNum,eta 是常数
-def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alpha_list,iterNum,eta):
+# lambda, rou, u, 是一维数组
+# T,iterNum,eta ,alpha是常数
+def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alpha_hat,iterNum,eta):
 
     k_new_list = []
     z_new_list = []
@@ -177,8 +176,6 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
         rou = copy.deepcopy(rou_list[ii])
         u = copy.deepcopy(u_list[ii])
         phi = copy.deepcopy(phi_list[ii])
-        alpha = copy.deepcopy(alpha_list[ii])
-
 
         k_new =  []
         z_new =  []
@@ -220,7 +217,7 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
                 else:
                     k_new.append(k_old[t])
 
-                temp_z = z_old[t]+ iterNum**(-1.0*eta)*(ap-alpha)
+                temp_z = z_old[t]+ iterNum**(-1.0*eta)*(ap-alpha_hat)
                 z_new.append(temp_z)
 
             k_new_list.append(k_new)
@@ -739,6 +736,7 @@ if __name__ =='__main__':
         varphi_old.append(stats.)
         rou_old.append(stats.)
     lambda_sigma = stats.gamma.rvs(3,1)[0]
+    k_sigma = random.uniform(0,1)
     u_sigma = 0
     cont =1000
     flag = 1
@@ -778,13 +776,24 @@ if __name__ =='__main__':
             k_per_row.append(stats.gamma.rvs(rou_old[jj]*lambda_old*phi_per_row[jj]/(u_old[jj]*(1-rou_old[jj])))[0])
         phi_old_temp.append(phi_per_row)
         k_old_temp.append(k_per_row)
-    phi_old = map(list,zip(*phi_old_temp))
     k_old = map(list,zip(*k_old_temp))
+    phi_old = map(list,zip(*phi_old_temp))
 
-    
-    
-    
-    
+    eta = random.uniform(0.5,1)
+    eta_sigma = random.uniform(0.5,1)
+    z_sigma_old = random.uniform(0,1)
+ 
+    for ii in range(1000):
+        iterNum = ii +1 
+        phi_new,tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta,u,rou_old,varphi_old,iterNum,eta,alpha_hat,T)
+        
+        k_new,z_new = UpdateK(k_old,z_old,T,lambda_old,rou_old,u,phi_new,alpha_hat,iterNum,eta)
+
+        temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma.u_sigma,lambda_sigma,k_sigma)
+
+
+
+
     phi_old = [[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],
            [1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1]]
     lambda_old = [1,1,1,1,1,1,1,1,1,1]
@@ -857,11 +866,10 @@ if __name__ =='__main__':
 
     for ii in range(1000):
         iterNum = ii+1
-        phi_new, tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta_old,u,rou,varphi,iterNum,eta,
-             alpha_phi_old,T)
+        phi_new, tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta_old,u,rou,varphi,iterNum,eta,alpha_phi_old,T)
         k_new, z_new = UpdateK(k_old,z_old,T,lambda_old,rou,u,phi_new,alpha_k_hat,iterNum,eta)
 
-        temp_sigma,sigma_square = UpdateSigma(x,y,T,beta_old,rou_sigma,u_sigma,lambda_sigma,k_sigma)
+        temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma)
 
 
         k_sigma_new,z_sigma_new= UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_square,
