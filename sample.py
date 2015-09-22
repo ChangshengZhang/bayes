@@ -672,7 +672,7 @@ if __name__ =='__main__':
             beta_2.append(0.97*beta_2[-1]+stats.norm.rvs(loc=0,scale=0.5,size=1)[0])
         else:
             beta_2.append(0)
-        if (t>=20 and t<=49)or (t>=120 and t<=149):
+        if (ii>=20 and ii<=49)or (ii>=120 and ii<=149):
             beta_3.append(-2)
         else:
             beta_3.append(0)
@@ -682,6 +682,7 @@ if __name__ =='__main__':
 
     lambda_old = 2
     alpha_hat = 0.3
+    alpha_hat_sigma = 0.3
     sigma = 1
     #y
     y= []
@@ -694,31 +695,34 @@ if __name__ =='__main__':
     u = []
     s_star = 0.1
     b_star = 0.1
-    u_star = []
-    lambda_star = []
+    u_star = 0
+    lambda_star =  stats.expon.rvs(scale=s_star,size=1)[0]
     lambda_old = []
     varphi_old = []
     rou_old = []
+    tao_u_star = 1
+    tao_lambda_star = 0.95
+
+    cont = 1000
+    flag = 1
+    while flag:
+        u_ranom =random.uniform(0,1)
+        v_random = stats.gamma.rvs(1,size=1)[0]
+        fy = (v_random+2*b_star)**(-3)
+        gy = np.exp(-1.0*v_random)
+        if u_ranom <=fy/(cont*gy):
+            u_star = v_random
+            flag = 0
+            break
+        else:
+            flag =1
+
     for ii in range(m+1):
-        temp_lambda = stats.expon.rvs(scale = s_star,size =1 )[0]
-        lambda_star.append(temp_lambda)
-        flag = 1
-        cont = 1000
-        while flag:
-            u_ranom =random.uniform(0,1)
-            v_random = stats.gamma.rvs(1,size=1)[0]
-            fy = (v_random+2*b_star)**(-3)
-            gy = np.exp(-1.0*v_random)
-            if u_ranom <=fy/(cont*gy):
-                u_star.append(v_random)
-                flag = 0
-                break
-            else:
-                flag =1 
-    for ii in range(m+1):
-        temp_u = stats.gamma.rvs(lambda_star[ii],lambda_star[ii]/u_star[ii])[0]
+        temp_u = stats.gamma.rvs(lambda_star,lambda_star/u_star,size=1)[0]
         u.append(temp_u)
+    
     for ii in range(m+1):
+        flag =1
         cont =1000
         while flag:
             u_ranom = random.uniform(0,1)
@@ -733,9 +737,9 @@ if __name__ =='__main__':
                 flag =1
     #这个分布有问题，目前还没写
     for ii in range(m+1):
-        varphi_old.append(stats.)
-        rou_old.append(stats.)
-    lambda_sigma = stats.gamma.rvs(3,1)[0]
+        varphi_old.append(stats.binom.rvs(77.6,2.4/77.6,size=1)[0])
+        rou_old.append(stats.binom.rvs(77.6,2.4/77.6,size=1)[0])
+    lambda_sigma = stats.gamma.rvs(3,1,size=1)[0]
     k_sigma = random.uniform(0,1)
     u_sigma = 0
     cont =1000
@@ -750,30 +754,44 @@ if __name__ =='__main__':
             break
         else:
             flag =1
-    rou_sigma = stats.
-
+    rou_sigma = stats.binom.rvs(38,2.0/38,size=1)[0]
 
     #生成phi,tao,k,z
     tao_phi_old = 0.3
     phi_old_temp = []
     k_old_temp = []
     k_per_row = []
-    z_old = 0.3 
-    
+    z_old = []
     for ii in range(m+1):
-        phi_per_row.append(stats.gamma.rvs(lambda_old[ii],lambda_old[ii]/u[ii]))
+        temp_z_old = []
+        for jj in range(T):
+            temp_z_old.append(random.uniform(0.3,0.7))
+        z_old.append(temp_z_old)
+
+    # 初值有待改进  
+    xi_old  = list(np.random.random((100,6,4)))
+    xi_sigma_old = list(np.random.random((100,3)))
+    s_xi_old = [1,1,1,1,1,1]
+    s_xi_sigma_old = 1
+    
+    phi_per_row = []
+    k_per_row = []
+
+    for ii in range(m+1):
+        phi_per_row.append(stats.gamma.rvs(lambda_old[ii],lambda_old[ii]/u[ii],size=1)[0])
     phi_old_temp.append(phi_per_row)
 
     for jj in range(m+1):
-        k_per_row.append(stats.gamma.rvs(rou_old[jj]*lambda_old*phi_old_temp[0][jj]/(u_old[jj]*(1-rou_old[jj])))[0])
+        print rou_old[jj]*lambda_old[jj]*phi_old_temp[0][jj]/(u[jj]*(1-rou_old[jj]))
+        k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_old_temp[0][jj]/(u[jj]*(1-rou_old[jj])),size=1)[0])
     k_old_temp.append(k_per_row)
-    
+
     for ii in range(1,T):
         phi_per_row = []
         k_per_row = []
         for jj in range(1+m):
-            phi_per_row.append(stats.gamma.rvs(lambda_old+k_old_temp[ii-1][jj],lambda_old/(u_old[jj]*(1-rou_old[jj])))[0])
-            k_per_row.append(stats.gamma.rvs(rou_old[jj]*lambda_old*phi_per_row[jj]/(u_old[jj]*(1-rou_old[jj])))[0])
+            phi_per_row.append(stats.gamma.rvs(lambda_old[jj]+k_old_temp[ii-1][jj],lambda_old/(u[jj]*(1-rou_old[jj])))[0])
+            k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj])))[0])
         phi_old_temp.append(phi_per_row)
         k_old_temp.append(k_per_row)
     k_old = map(list,zip(*k_old_temp))
@@ -781,110 +799,26 @@ if __name__ =='__main__':
 
     eta = random.uniform(0.5,1)
     eta_sigma = random.uniform(0.5,1)
-    z_sigma_old = random.uniform(0,1)
- 
+    z_sigma_old = []
+    for ii in range(T):
+        z_sigma_old.append(random.uniform(0,1))
+
     for ii in range(1000):
-        iterNum = ii +1 
+        print "It is the "+str(ii) + " 's iteration." 
+        iterNum = ii +1
         phi_new,tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta,u,rou_old,varphi_old,iterNum,eta,alpha_hat,T)
-        
+
         k_new,z_new = UpdateK(k_old,z_old,T,lambda_old,rou_old,u,phi_new,alpha_hat,iterNum,eta)
 
         temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma.u_sigma,lambda_sigma,k_sigma)
 
-
-
-
-    phi_old = [[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1]]
-    lambda_old = [1,1,1,1,1,1,1,1,1,1]
-    k_old = [[2,1,4,1,2,1,4,1,1,1],[2,1,4,1,2,1,4,1,1,1],[2,1,4,1,2,1,4,1,1,1],[2,1,4,1,2,1,4,1,1,1],
-         [2,1,4,1,2,1,4,1,1,1],[2,1,4,1,2,1,4,1,1,1]]
-    z_old = [[1,0.5,1,1,1,2,1,1.3,1,1],[1,0.5,1,1,1,2,1,1.3,1,1],[1,0.5,1,1,1,2,1,1.3,1,1],[1,0.5,1,1,1,2,1,1.3,1,1],
-         [1,0.5,1,1,1,2,1,1.3,1,1],[1,0.5,1,1,1,2,1,1.3,1,1]]
-
-    alpha_phi_old = [[0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97],[0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97],
-         [0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97],[0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97],
-         [0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97],[0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97]]
-
-    u = [0.98,0.98,0.98,0.98,0.98,0.98,0.98,0.98,0.98,0.98]
-    rou = [0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99]
-    varphi = [0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99]
-    #iterNum =1
-    eta = 0.75
-    alpha_k_hat = [0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3]
-
-    #update sigma^2
-    x = [[1,2,3,2,3,2,3,2,3,1],[2,3,4,2,3,2,3,2,3,1],[5,3,1,2,3,2,3,2,3,1],[1,1,3,2,3,2,3,2,3,1],
-         [1,2,3,2,3,2,3,2,3,1],[2,3,4,2,3,2,3,2,3,1]]
-    m = len(x)-1
-    y = [1,2,3,3,2,1,1,2,3,2]
-    beta_old = [[1,2,3,2,3,2,3,2,3,1],[2,3,4,2,3,2,3,2,3,1],[5,3,1,2,3,2,3,2,3,1],[1,1,3,2,3,2,3,2,3,1],
-        [5,3,1,2,3,2,3,2,3,1],[1,1,3,2,3,2,3,2,3,1]]
-
-    # rou_sigma != 1
-    rou_sigma = 0.95
-    u_sigma = 2.0
-    lambda_sigma = 1.0
-    k_sigma = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
-
-
-
-    #update k_sigma
-    z_sigma_old = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
-    alpha = 0.95
-
-    #2.5 update
-
-    m =5
-
-    alpha_hat = 0.97
-    alpha_hat_sigma = 0.97
-    eta_sigma = 0.75
-
-    xi_old  = list(np.random.random((100,6,4)))
-    xi_sigma_old = list(np.random.random((100,3)))
-    s_xi_old = [1,1,1,1,1,1]
-    s_xi_sigma_old = 1
-
-
-
-    # update U_star
-    u_star_old = 2
-    tao_u_star = 0.8
-    b_star= 1
-    lambda_star = 2
-
-
-    # update lambda
-    # s_star,u_star 是2.5里的
-    s_star =2
-    tao_lambda_star = 0.95
-
-
-    # run sample
-    print "begin \n"
-
-    for ii in range(1000):
-        iterNum = ii+1
-        phi_new, tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta_old,u,rou,varphi,iterNum,eta,alpha_phi_old,T)
-        k_new, z_new = UpdateK(k_old,z_old,T,lambda_old,rou,u,phi_new,alpha_k_hat,iterNum,eta)
-
-        temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma)
-
-
-        k_sigma_new,z_sigma_new= UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_square,
-               iterNum,eta,alpha,T)
-
+        k_sigma_new,z_sigma_new = UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,rou_sigma,u_sigma,sigma_square)
 
         #2.5
         #xi_new is 2-dim
         # xi_sigma_new is 1-dim s_xi_new is 1-dim, either
         # s_xi_sigma_new is const
-        xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new = UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,
-              temp_sigma,k_sigma_new,beta_old,
-              lambda_old,u,rou,varphi,xi_old,s_xi_old,
-              lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,
-              s_xi_sigma_old,phi_new,k_new)
+        xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new = UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new)
         #还原 xi 到变量中
         # xi_new 是二维数组
         lambda_new = np.exp(zip(*xi_new)[0])
@@ -896,7 +830,6 @@ if __name__ =='__main__':
         u_sigma_new = np.exp(xi_sigma_new[1])
         rou_sigma_new =np.exp(xi_sigma_new[2])
 
-
         beta_new = UpdateBeta(phi_new,varphi_new,T)
 
         print "beta:"
@@ -904,10 +837,9 @@ if __name__ =='__main__':
         print "\n"
 
         # u_i 不等于 u，u_i是2.5得到的
-        u_star_new, tao_u_star_new = UpdateU_star(u_star_old,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha)
+        u_star_new, tao_u_star_new = UpdateU_star(u_star,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha_hat)
 
-        lambda_star_new, tao_lambda_star_new = UpdateLambda(lambda_star,tao_lambda_star,s_star,u_star_new,m,
-            u_new,eta,alpha,iterNum)
+        tao_lambda_star_new = UpdateLambda(lambda_star,tao_lambda_star,s_star,u_star_new,m,u_new,eta,alpha_hat,iterNum)
 
         #在这里更新变量
         #deepcopy
@@ -916,10 +848,10 @@ if __name__ =='__main__':
         tao_phi_old = copy.deepcopy(tao_phi_new)
         lambda_old = copy.deepcopy(lambda_new)
         k_old = copy.deepcopy(k_new)
-        beta_old = copy.deepcopy(beta_new)
+        beta = copy.deepcopy(beta_new)
         u = copy.deepcopy(u_new)
-        rou = copy.deepcopy(rou_new)
-        varphi =copy.deepcopy(varphi_new)
+        rou_old = copy.deepcopy(rou_new)
+        varphi_old =copy.deepcopy(varphi_new)
         z_old = copy.deepcopy(z_new)
         rou_sigma = copy.deepcopy(rou_sigma_new)
         u_sigma = copy.deepcopy(u_sigma_new)
@@ -927,7 +859,7 @@ if __name__ =='__main__':
         k_sigma = copy.deepcopy(k_sigma_new)
         z_sigma_old = copy.deepcopy(z_sigma_new)
 
-        u_star_old= copy.deepcopy(u_star_new)
+        u_star= copy.deepcopy(u_star_new)
         tao_u_star = copy.deepcopy(tao_u_star_new)
         lambda_star = copy.deepcopy(lambda_star_new)
         tao_lambda_star = copy.deepcopy(tao_lambda_star_new)
