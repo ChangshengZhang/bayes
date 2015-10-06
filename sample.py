@@ -38,7 +38,7 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         phi_new = []
         tao_phi_new =[]
         # step 1
-        xPhi = stats.norm(loc=np.log(phi_old[0]) ,scale=tao_phi_old[0] )
+        xPhi = stats.norm(loc=np.log(phi_old[0]) ,scale=np.sqrt(tao_phi_old[0]))
 
         #注意这里rvs函数返回的是一个数组！！！
         logPhi_i1_new =xPhi.rvs(size =1)
@@ -77,7 +77,7 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         t =1
         while t<T-1:
             # step 1
-            xPhi = stats.norm(loc=np.log(phi_old[t]) ,scale=tao_phi_old[t] )
+            xPhi = stats.norm(loc=np.log(phi_old[t]) ,scale=np.sqrt(tao_phi_old[t]))
 
             logPhi_it_new =xPhi.rvs(size =1)
             phi_it_new_temp = np.exp(logPhi_it_new[0])
@@ -120,7 +120,7 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         # step 1
         t=T-1
 
-        xPhi = stats.norm(loc=np.log(phi_old[t]) ,scale=tao_phi_old[t] )
+        xPhi = stats.norm(loc=np.log(phi_old[t]) ,scale=np.sqrt(tao_phi_old[t]))
 
         logPhi_it_new =xPhi.rvs(size =1)
         phi_it_new_temp = np.exp(logPhi_it_new[0])
@@ -560,11 +560,11 @@ def UpdateBeta(phi_list,varphi_list,T):
         varphi = copy.deepcopy(varphi_list[ii])
         beta =[]
 
-        beta_X = stats.norm(loc=0,scale =phi[0])
+        beta_X = stats.norm(loc=0,scale =np.sqrt(phi[0]))
         beta_1 = beta_X.rvs(1)
         beta.append(beta_1[0])
         for t in range(1,T):
-            eta_X = stats.norm(loc =0,scale =(1-varphi**2)*phi[t])
+            eta_X = stats.norm(loc =0,scale =np.sqrt((1-varphi**2)*phi[t]))
             eta_t = eta_X.rvs(1)
             beta_t =(phi[t]/phi[t-1])**0.5*varphi*beta[t-1] + eta_t[0]
             beta.append(beta_t)
@@ -574,7 +574,7 @@ def UpdateBeta(phi_list,varphi_list,T):
 #u,是一维数组
 # u_star,tao,b_star,lambda_star,m,iterNum,eta,alpha 是常数
 def UpdateU_star(u_star_old,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha):
-    log_u_star_X = stats.norm(loc =np.log(u_star_old),scale =tao_u_star)
+    log_u_star_X = stats.norm(loc =np.log(u_star_old),scale =np.sqrt(tao_u_star))
     log_u_star = log_u_star_X.rvs(1)
     u_star = np.exp(log_u_star[0])
 
@@ -602,7 +602,7 @@ def UpdateU_star(u_star_old,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha):
 # lambda_star,tao,s_star,u_star,m,eta,alpha,iterNum 是常数
 
 def UpdateLambda(lambda_star_old,tao_lambda_star_old,s_star,u_star,m,u,eta,alpha,iterNum):
-    log_lambda_star_X = stats.norm(loc =np.log(lambda_star_old),scale =tao_lambda_star_old )
+    log_lambda_star_X = stats.norm(loc =np.log(lambda_star_old),scale =np.sqrt(tao_lambda_star_old))
     log_lambda_star = log_lambda_star_X.rvs(1)
     lambda_star = np.exp(log_lambda_star[0])
 
@@ -737,8 +737,8 @@ if __name__ =='__main__':
                 flag =1
     #这个分布有问题，目前还没写
     for ii in range(m+1):
-        varphi_old.append(stats.binom.rvs(77.6,2.4/77.6,size=1)[0])
-        rou_old.append(stats.binom.rvs(77.6,2.4/77.6,size=1)[0])
+        varphi_old.append(stats.beta.rvs(77.6,2.4,size=1)[0])
+        rou_old.append(stats.beta.rvs(77.6,2.4,size=1)[0])
     lambda_sigma = stats.gamma.rvs(3,1,size=1)[0]
     k_sigma = random.uniform(0,1)
     u_sigma = 0
@@ -754,7 +754,7 @@ if __name__ =='__main__':
             break
         else:
             flag =1
-    rou_sigma = stats.binom.rvs(38,2.0/38,size=1)[0]
+    rou_sigma = stats.beta.rvs(38,2.0,size=1)[0]
 
     #生成phi,tao,k,z
     tao_phi_old = 0.3
@@ -782,7 +782,6 @@ if __name__ =='__main__':
     phi_old_temp.append(phi_per_row)
 
     for jj in range(m+1):
-        print rou_old[jj]*lambda_old[jj]*phi_old_temp[0][jj]/(u[jj]*(1-rou_old[jj]))
         k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_old_temp[0][jj]/(u[jj]*(1-rou_old[jj])),size=1)[0])
     k_old_temp.append(k_per_row)
 
@@ -791,7 +790,11 @@ if __name__ =='__main__':
         k_per_row = []
         for jj in range(1+m):
             phi_per_row.append(stats.gamma.rvs(lambda_old[jj]+k_old_temp[ii-1][jj],lambda_old/(u[jj]*(1-rou_old[jj])))[0])
-            k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj])))[0])
+            print "u",u[jj]
+            
+            print rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj]))
+            k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj]))))
+        
         phi_old_temp.append(phi_per_row)
         k_old_temp.append(k_per_row)
     k_old = map(list,zip(*k_old_temp))
