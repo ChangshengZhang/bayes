@@ -404,7 +404,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
         k_i_new = []
 
         if lambda_i_new > lambda_i_old:
-            temp = stats.gamma.rvs(lambda_i_new-lambda_i_old,lambda_i_new/u_i_new,size=1)
+            temp = stats.gamma.rvs(lambda_i_new-lambda_i_old,scale = 1.0/(lambda_i_new/u_i_new),size=1)
             phi_new.append(lambda_i_old*u_i_new/(lambda_i_new*u_i_old)*phi_old[0]+temp[0])
         else:
             temp = stats.bernoulli.rvs(lambda_i_new ,loc =lambda_i_old-lambda_i_new,size=1)
@@ -424,7 +424,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
 
             if t<len(phi_old)-1:
                 if lambda_i_new+k_i_new[t-1] > lambda_i_old + k_i_old[t-1]:
-                    temp_sample = stats.gamma.rvs(lambda_i_new+k_i_new[t-1]-lambda_i_old-k_i_old[t-1],lambda_i_new/u_i_new*(1+rou_divide_new),size=1)
+                    temp_sample = stats.gamma.rvs(lambda_i_new+k_i_new[t-1]-lambda_i_old-k_i_old[t-1],scale = 1.0/(lambda_i_new/u_i_new*(1+rou_divide_new)),size=1)
 
                     phi_new.append(lambda_i_new*u_i_new*(1+rou_divide_old)/(lambda_i_old*u_i_old*(1+rou_divide_new))+temp_sample[0])
                 else:
@@ -484,7 +484,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
             rou_sigma_divide_old = rou_sigma_old/(1-rou_sigma_old)
 
             if lambda_sigma_new >lambda_sigma_old:
-                temp = stats.gamma.rvs(lambda_sigma_new-lambda_sigma_old,lambda_sigma_new/u_sigma_new,size=1)
+                temp = stats.gamma.rvs(lambda_sigma_new-lambda_sigma_old,scale =lambda_sigma_new/u_sigma_new,size=1)
                 sigma_new.append(lambda_sigma_old*u_sigma_new/(lambda_sigma_new*u_sigma_old)*sigma_old[0]+temp[0])
 
             else:
@@ -501,7 +501,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
 
                 if t<len(sigma_old)-1:
                     if lambda_sigma_new+k_sigma_new[t-1]>lambda_sigma_old+k_sigma_old[t-1]:
-                        temp = stats.gamma.rvs(lambda_sigma_new-lambda_sigma_old+k_sigma_new[t-1]-k_sigma_old[t-1],lambda_sigma_new/u_sigma_new*(1+rou_sigma_divide_new),size=1)
+                        temp = stats.gamma.rvs(lambda_sigma_new-lambda_sigma_old+k_sigma_new[t-1]-k_sigma_old[t-1],scale=1.0/(lambda_sigma_new/u_sigma_new*(1+rou_sigma_divide_new)),size=1)
                         sigma_new.append(temp[0]+lambda_sigma_new*u_sigma_new*(1+rou_sigma_divide_old)/(lambda_sigma_old*u_sigma_old*(1+rou_sigma_divide_new)))
                     else:
                         temp = stats.bernoulli.rvs(lambda_sigma_new+k_sigma_new[t-1],
@@ -719,7 +719,7 @@ if __name__ =='__main__':
             flag =1
 
     for ii in range(m+1):
-        temp_u = stats.gamma.rvs(lambda_star,lambda_star/u_star,size=1)[0]
+        temp_u = stats.gamma.rvs(lambda_star,scale = 1.0/(lambda_star/u_star),size=1)[0]
         u.append(temp_u)
     
     for ii in range(m+1):
@@ -740,7 +740,7 @@ if __name__ =='__main__':
     for ii in range(m+1):
         varphi_old.append(stats.beta.rvs(77.6,2.4,size=1)[0])
         rou_old.append(stats.beta.rvs(77.6,2.4,size=1)[0])
-    lambda_sigma = stats.gamma.rvs(3,1,size=1)[0]
+    lambda_sigma = stats.gamma.rvs(3,scale= 1,size=1)[0]
     k_sigma = random.uniform(0,1)
     u_sigma = 0
     cont =1000
@@ -778,28 +778,42 @@ if __name__ =='__main__':
     phi_per_row = []
     k_per_row = []
 
+    print "initial value:\n"
+    print "rou_old:",rou_old 
+    print "lambda_old:", lambda_old
+    print "u:", u
+
+
     for ii in range(m+1):
-        phi_per_row.append(stats.gamma.rvs(lambda_old[ii],lambda_old[ii]/u[ii],size=1)[0])
+        phi_per_row.append(stats.gamma.rvs(lambda_old[ii],scale=1.0/(lambda_old[ii]/u[ii]),size=1)[0])
     phi_old_temp.append(phi_per_row)
 
     for jj in range(m+1):
         k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_old_temp[0][jj]/(u[jj]*(1-rou_old[jj])),size=1)[0])
     k_old_temp.append(k_per_row)
+    
+    print "\n"
+    print "phi, k\n"
 
     for ii in range(1,T):
         phi_per_row = []
         k_per_row = []
         for jj in range(1+m):
-            phi_per_row.append(stats.gamma.rvs(lambda_old[jj]+k_old_temp[ii-1][jj],lambda_old/(u[jj]*(1-rou_old[jj])))[0])
-            print "u",u[jj]
-            
-            print rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj]))
-            k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj]))))
+            phi_per_row.append(stats.gamma.rvs(lambda_old[jj]+k_old_temp[ii-1][jj],scale=1.0/(lambda_old/(u[jj]*(1-rou_old[jj]))),size=1)[0])
+            #print "u",u[jj]
+            #print rou_old[jj],lambda_old[jj],phi_per_row[jj],u[jj],1-rou_old[jj]
+            #print "\n"
+            #print rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj]))
+            k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj])),size=1)[0])
         
         phi_old_temp.append(phi_per_row)
         k_old_temp.append(k_per_row)
     k_old = map(list,zip(*k_old_temp))
     phi_old = map(list,zip(*phi_old_temp))
+    print phi_old
+    print "\n"
+    print k_old 
+
 
     eta = random.uniform(0.5,1)
     eta_sigma = random.uniform(0.5,1)
