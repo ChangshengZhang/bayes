@@ -50,12 +50,12 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         temp_b = np.exp(-1.0*phi_old[0]*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_old[0])**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
         p_Phi_i1 =temp_a*temp_b*np.exp(-0.5*((beta_old[0]**2)/phi_old[0]+temp_c))
-
+        print p_Phi_i1
         temp_a = phi_i1_new_temp**(lambda_old+k_old[0]-1.5)
         temp_b = np.exp(-1.0*phi_i1_new_temp*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_i1_new_temp)**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
         p_Phi_i1_new =temp_a*temp_b*np.exp(-0.5*((beta_old[0]**2)/phi_i1_new_temp+temp_c))
-
+        print p_Phi_i1_new
         ap_phi = min(1,1.0*p_Phi_i1_new/p_Phi_i1)
 
         # step 3
@@ -758,7 +758,7 @@ if __name__ =='__main__':
     rou_sigma = stats.beta.rvs(38,2.0,size=1)[0]
 
     #生成phi,tao,k,z
-    tao_phi_old = 0.3
+    tao_phi_old = 0.3*np.ones((m+1,T),dtype=np.int16)
     phi_old_temp = []
     k_old_temp = []
     k_per_row = []
@@ -775,45 +775,31 @@ if __name__ =='__main__':
     s_xi_old = [1,1,1,1,1,1]
     s_xi_sigma_old = 1
     
-    phi_per_row = []
-    k_per_row = []
 
     print "initial value:\n"
     print "rou_old:",rou_old 
     print "lambda_old:", lambda_old
     print "u:", u
 
-
+    phi_old = []
+    k_old = []
     for ii in range(m+1):
-        phi_per_row.append(stats.gamma.rvs(lambda_old[ii],scale=1.0/(lambda_old[ii]/u[ii]),size=1)[0])
-    phi_old_temp.append(phi_per_row)
-
-    for jj in range(m+1):
-        k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_old_temp[0][jj]/(u[jj]*(1-rou_old[jj])),size=1)[0])
-    k_old_temp.append(k_per_row)
-    
-    print "\n"
-    print "phi, k\n"
-
-    for ii in range(1,T):
-        phi_per_row = []
-        k_per_row = []
-        for jj in range(1+m):
-            phi_per_row.append(stats.gamma.rvs(lambda_old[jj]+k_old_temp[ii-1][jj],scale=1.0/(lambda_old/(u[jj]*(1-rou_old[jj]))),size=1)[0])
-            #print "u",u[jj]
-            #print rou_old[jj],lambda_old[jj],phi_per_row[jj],u[jj],1-rou_old[jj]
-            #print "\n"
-            #print rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj]))
-            k_per_row.append(stats.poisson.rvs(rou_old[jj]*lambda_old[jj]*phi_per_row[jj]/(u[jj]*(1-rou_old[jj])),size=1)[0])
-        
-        phi_old_temp.append(phi_per_row)
-        k_old_temp.append(k_per_row)
-    k_old = map(list,zip(*k_old_temp))
-    phi_old = map(list,zip(*phi_old_temp))
+        temp_phi_init = []
+        temp_phi_init.append(stats.gamma.rvs(lambda_old[ii],scale=1.0/(lambda_old[ii]/u[ii]),size=1)[0])
+        phi_old.append(temp_phi_init)
+        temp_k_init = []
+        temp_k_init.append(stats.poisson.rvs(rou_old[ii]*lambda_old[ii]*phi_old[ii][0]/(u[ii]*(1-rou_old[ii])),size=1)[0])
+        k_old.append(temp_k_init)
+        for jj in range(1,T):
+            temp_phi = stats.gamma.rvs(lambda_old[ii]+k_old[ii][-1],scale=1.0/(lambda_old[ii]/(u[ii]*(1-rou_old[ii]))),size=1)[0]  
+            phi_old[ii].append(temp_phi)
+            temp_k = stats.poisson.rvs(rou_old[ii]*lambda_old[ii]*phi_old[ii][-1]/(u[ii]*(1-rou_old[ii])),size=1)[0]
+            k_old[ii].append(temp_k)
+    print "phi_old"
     print phi_old
     print "\n"
-    print k_old 
-
+    print "k_old"
+    print k_old
 
     eta = random.uniform(0.5,1)
     eta_sigma = random.uniform(0.5,1)
