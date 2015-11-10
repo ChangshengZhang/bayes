@@ -39,13 +39,10 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         phi_new = []
         tao_phi_new =[]
         # step 1
-        xPhi = stats.norm(loc=np.log(phi_old[0]) ,scale=np.sqrt(tao_phi_old[0]))
-
-        #注意这里rvs函数返回的是一个数组！！！
-        logPhi_i1_new =xPhi.rvs(size =1)
-        phi_i1_new_temp = np.exp(logPhi_i1_new[0])
-
+        
+        phi_i1_new_temp = np.exp(stats.norm.rvs(loc=np.log(phi_old[0]),scale = np.sqrt(tao_phi_old[0]),size=1)[0])
         # step 2
+        
         temp_a = phi_old[0]**(lambda_old+k_old[0]-1.5)
         temp_b = np.exp(-1.0*phi_old[0]*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_old[0])**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
@@ -59,18 +56,13 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         ap_phi = min(1,1.0*p_Phi_i1_new/p_Phi_i1)
 
         # step 3
-
-        yPhi = stats.binom(1,ap_phi)
-
-        temp = yPhi.rvs(1)
-
-        if temp[0]==1:
-            phi_i1_new = phi_i1_new_temp
+    
+        temp_binom = stats.binom.rvs(1,ap_phi,size=1)[0]
+        if temp_binom ==1:
+            phi_new.append(phi_i1_new_temp)
         else:
-            phi_i1_new = phi_old[0]
-
-        phi_new.append(phi_i1_new)
-
+            phi_new.append(phi_old[0])
+        
         # step 4
         log_tao_i1_new = np.log(tao_phi_old[0])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_hat)
         tao_phi_new.append(np.exp(log_tao_i1_new))
@@ -78,43 +70,38 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         t =1
         while t<T-1:
             # step 1
-            xPhi = stats.norm(loc=np.log(phi_old[t]) ,scale=np.sqrt(tao_phi_old[t]))
-
-            logPhi_it_new =xPhi.rvs(size =1)
-            phi_it_new_temp = np.exp(logPhi_it_new[0])
-
+            
+            phi_it_new_temp = np.exp(stats.norm.rvs(loc=np.log(phi_old[t]),scale = np.sqrt(tao_phi_old[t]),size=1)[0])
             # step 2
             temp_a = phi_old[t]**(lambda_old+k_old[t-1]+k_old[t]-1.5)
-
+            #print temp_a
             temp_b = np.exp(-1.0*phi_old[t]*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_old[t])**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_old[t]/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_old[t]*(1-varphi**2))
             p_Phi_it =temp_a*temp_b*np.exp(-0.5*(temp_c+temp_d))
-
+            #print p_Phi_it 
             temp_a = phi_it_new_temp**(lambda_old+k_old[t-1]+k_old[t]-1.5)
             temp_b = np.exp(-1.0*phi_it_new_temp*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_it_new_temp)**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_it_new_temp/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_it_new_temp*(1-varphi**2))
             p_Phi_it_new =temp_a*temp_b*np.exp(-0.5*(temp_c+temp_d))
-
+            #print p_Phi_it_new
 
             ap_phi = min(1,float(1.0*p_Phi_it_new/p_Phi_it))
 
             # step 3
+            
+            temp_binom = stats.binom.rvs(1,ap_phi,size=1)[0]
 
-            yPhi = stats.binom(1,ap_phi)
-            temp  =yPhi.rvs(1)
-            if temp[0]==0:
-                phi_it_new = phi_it_new_temp
+            if temp_binom ==1:
+                phi_new.append(phi_it_new_temp)
             else:
-                phi_it_new = phi_old[t]
-
-            phi_new.append(phi_it_new)
+                phi_new.append(phi_old[t])
 
             # step 4
             log_tao_it_new = np.log(tao_phi_old[t])+(iterNum)**(-1.0*eta)*(ap_phi-alpha_phi_hat)
             tao_phi_new.append(np.exp(log_tao_it_new))
-
+            
             t = t+1
 
         # t = T时,下标要-1
