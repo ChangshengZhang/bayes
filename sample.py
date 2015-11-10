@@ -18,7 +18,6 @@ import copy
 # iterNum 是迭代次数，eta,T,alpha_hat 为常数
 def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_list,u_list,rou_list,varphi_list,
       iterNum,eta,alpha_phi_hat,T):
-    print "begin a new iteration:"
 
     #二维数组
     phi_new_list = []
@@ -680,70 +679,21 @@ if __name__ =='__main__':
             y_ii = y_ii + x[jj][ii]*beta[jj][ii]
         y.append(y_ii)
     # u,rou,lambda,varphi, lambda_star,u_star
-    u = []
+    u = list(0.1*np.ones(m+1))
     s_star = 0.1
     b_star = 0.1
-    u_star = 0
-    lambda_star =  stats.expon.rvs(scale=s_star,size=1)[0]
-    lambda_old = []
-    varphi_old = []
-    rou_old = []
+    u_star = 1 
+    lambda_star = 1 
+    lambda_old = list(0.1*np.ones(m+1))
+    varphi_old = list(0.97*np.ones(m+1))
+    rou_old = list(0.97*np.ones(m+1))
     tao_u_star = 1
     tao_lambda_star = 0.95
-
-    cont = 1000
-    flag = 1
-    while flag:
-        u_ranom =random.uniform(0,1)
-        v_random = stats.gamma.rvs(1,size=1)[0]
-        fy = (v_random+2*b_star)**(-3)
-        gy = np.exp(-1.0*v_random)
-        if u_ranom <=fy/(cont*gy):
-            u_star = v_random
-            flag = 0
-            break
-        else:
-            flag =1
-
-    for ii in range(m+1):
-        temp_u = stats.gamma.rvs(lambda_star,scale = 1.0/(lambda_star/u_star),size=1)[0]
-        u.append(temp_u)
     
-    for ii in range(m+1):
-        flag =1
-        cont =1000
-        while flag:
-            u_ranom = random.uniform(0,1)
-            v_random = stats.gamma.rvs(1,size=1)[0]
-            fy = v_random*(0.5+v_random)**(-4)
-            gy = np.exp(-1.0*v_random)
-            if u_ranom <=fy/(cont*gy):
-                lambda_old.append(v_random)
-                flag = 0
-                break
-            else:
-                flag =1
-    #这个分布有问题，目前还没写
-    for ii in range(m+1):
-        varphi_old.append(stats.beta.rvs(77.6,2.4,size=1)[0])
-        rou_old.append(stats.beta.rvs(77.6,2.4,size=1)[0])
-    lambda_sigma = stats.gamma.rvs(3,scale= 1,size=1)[0]
-    k_sigma = random.uniform(0,1)
-    u_sigma = 0
-    cont =1000
-    flag = 1
-    while flag:
-        u_random = random.uniform(0,1)
-        v_random = stats.gamma.rvs(1,size=1)[0]
-        fy = (1+v_random)**(-1.5)
-        gy = np.exp(-1.0*v_random)
-        if u_random <= fy/(cont*gy):
-            u_sigma = v_random
-            break
-        else:
-            flag =1
+    lambda_sigma = 3 
+    k_sigma = list(np.ones(T))
+    u_sigma = 0.03
     rou_sigma = stats.beta.rvs(38,2.0,size=1)[0]
-
     #生成phi,tao,k,z
     tao_phi_old = 0.3*np.ones((m+1,T),dtype=np.int16)
     phi_old_temp = []
@@ -771,15 +721,13 @@ if __name__ =='__main__':
     phi_old = []
     k_old = []
     for ii in range(m+1):
-        temp_phi_init = []
-        temp_phi_init.append(stats.gamma.rvs(lambda_old[ii],scale=1.0/(lambda_old[ii]/u[ii]),size=1)[0])
+        temp_phi_init = [1]
         phi_old.append(temp_phi_init)
         temp_k_init = []
         temp_k_init.append(stats.poisson.rvs(rou_old[ii]*lambda_old[ii]*phi_old[ii][0]/(u[ii]*(1-rou_old[ii])),size=1)[0])
         k_old.append(temp_k_init)
         for jj in range(1,T):
-            temp_phi = stats.gamma.rvs(lambda_old[ii]+k_old[ii][-1],scale=1.0/(lambda_old[ii]/(u[ii]*(1-rou_old[ii]))),size=1)[0]  
-            phi_old[ii].append(temp_phi)
+            phi_old[ii].append(1)
             temp_k = stats.poisson.rvs(rou_old[ii]*lambda_old[ii]*phi_old[ii][-1]/(u[ii]*(1-rou_old[ii])),size=1)[0]
             k_old[ii].append(temp_k)
     print "phi_old"
@@ -797,13 +745,14 @@ if __name__ =='__main__':
     for ii in range(1000):
         print "It is the "+str(ii) + " 's iteration." 
         iterNum = ii +1
+        print "update phi"
         phi_new,tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta,u,rou_old,varphi_old,iterNum,eta,alpha_hat,T)
-
+        print "update kappa"
         k_new,z_new = UpdateK(k_old,z_old,T,lambda_old,rou_old,u,phi_new,alpha_hat,iterNum,eta)
-
-        temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma.u_sigma,lambda_sigma,k_sigma)
-
-        k_sigma_new,z_sigma_new = UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,rou_sigma,u_sigma,sigma_square)
+        print "update sgima^2"
+        temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma)
+        print "update kappa^{sgima}"
+        k_sigma_new,z_sigma_new = UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_square,iterNum,eta,alpha_hat,T)
 
         #2.5
         #xi_new is 2-dim
