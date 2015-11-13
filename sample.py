@@ -317,12 +317,70 @@ def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2
 
     return  k_sigma_new,z_sigma_new
 
+def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
+    ####卡尔曼滤波
+    beta_new_list = []
+    beta_var_list = []
+    beta_final_list = []
+    Py_condition_new=0
+    SumTemp_new=0
+    
+    beta_temp_old = np.zeros(len(beta))
+    beta_var = np.diag(zip(*phi_new_list)[0])
+    K_k = np.dot(np.dot(beta_var,zip(*x)[0]),1.0/(np.dot(np.dot(zip(*x)[0],beta_var),zip(*x)[0])+sigma_square[0]**2))
+    beta_temp = beta_temp_old+ np.dot(K_k,y[0]-np.dot(zip(*x)[0],beta_temp_old)) 
+    beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[0]])),beta_var)
+    beta_final_list.append(list(stats.multivariate_normal.rvs(mean=beta_temp,cov=beta_var_new,size=1)))
+    print "beta_var:\n",beta_var
+    print "beta_var_new:\n",beta_var_new
+    beta_new_list.append(beta_temp)
+    beta_var_list.append(beta_var_new)
+    
+    vt_0=(np.dot(np.dot(zip(*x)[0],beta_var),zip(*x)[0])+sigma_square[0]**2)**0.5
+    
+    for tt in range(1,len(phi_new_list[0])):
+        temp_varphi = []
+        temp_eta = []
+        for kk in range(len(beta)):
+            temp_varphi.append(np.sqrt(phi_new_list[kk][tt]/phi_new_list[kk][tt-1])*varphi_old[ii])
+            temp_eta.append((1-varphi_old[ii])**2*phi_new_list[kk][tt])
+        varphi_t = np.diag(temp_varphi)
+        Q_t = np.diag(temp_eta)
+        beta_temp_old = np.dot(varphi_t,beta_new_list[tt-1])
+        beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
+        K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2))
+        beta_temp = beta_temp_old + np.dot(K_k,y[tt]-np.dot(zip(*x)[tt],beta_temp_old))
+        beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[tt]])),beta_var)
+        beta_new_list.append(beta_temp)
+        beta_var_list.append(beta_var_new)
+        
+        #print "beta_var:\n",beta_var 
+        #print "beta_var_new:\n",beta_var_new
+
+        beta_final_list.append(list(stats.multivariate_normal.rvs(mean=beta_temp,cov=beta_var_new,size=1)))
+##计算p(y|...)的条件概率
+
+        vt=(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2)**0.5
+        et=y[tt]-np.dot(zip(*x)[tt],beta_temp_old)
+        print "vt:\n",vt 
+        print "et:\n",et
+        print "SumTemp:\n",SumTemp_new
+        SumTemp_new=SumTemp_new+(np.log(vt)+et**2/vt)
+    
+    beta_final_list = list(np.array(beta_final_list).T)
+    #print beta_final_list 
+    
+    SumTemp_new=SumTemp_new+(np.log(vt_0)+y[0]**2/vt_0)
+
+    Py_condition_new=np.exp(-0.5*SumTemp_new)
+    print"Py_condition_new:",Py_condition_new
+    return beta_final_list,Py_condition_new
 
 # xi_old 是三维数组
 # beta，xi_sigma_old。phi_old，k_old 是二维数组
 # sigma_old，k_sigma_old，lambda_old，u_old，rou_old,varphi_old,s_xi_old是一维数组
 # alpha_hat,alpha_hat_sigma，iterNum,eta,eta_sigma，lambda_sigma_old,u_sigma_old, rou_sigma_old,s_xi_sigma_old 是常数
-def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigma_old,beta,lambda_old,u_old,rou_old,varphi_old,xi_old,s_xi_old_list,lambda_sigma_old,u_sigma_old,rou_sigma_old,xi_sigma_old,s_xi_sigma_old,phi_old_list,k_old_list,x,y,sigma_square):
+def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigma_old,beta,lambda_old,u_old,rou_old,varphi_old,xi_old,s_xi_old_list,lambda_sigma_old,u_sigma_old,rou_sigma_old,xi_sigma_old,s_xi_sigma_old,phi_old_list,k_old_list,x,y):
     # step 1
 
     phi_new_list = []
@@ -427,63 +485,49 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
 
     print sigma_new,len(sigma_new)
     print k_sigma_new,len(k_sigma_new)
-#Step 4
-####卡尔曼滤波
-    beta_new_list = []
-    beta_var_list = []
-    beta_final_list = []
-    Py_condition_new=0
-    SumTemp_new=0
-    
-    beta_temp_old = np.zeros(len(beta))
-    beta_var = np.diag(zip(*phi_new_list)[0])
-    K_k = np.dot(np.dot(beta_var,zip(*x)[0]),1.0/(np.dot(np.dot(zip(*x)[0],beta_var),zip(*x)[0])+sigma_square[0]))
-    print "K_k:",K_k
-    beta_temp = beta_temp_old+ np.dot(K_k,y[0]-np.dot(zip(*x)[0],beta_temp_old)) 
-    beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[0]])),beta_var)
-    beta_final_list.append(list(stats.multivariate_normal.rvs(mean=beta_temp,cov=beta_var_new,size=1)))
-    
-    print "beta_temp:",beta_temp
-    print "beta_var_new:",beta_var_new
-    beta_new_list.append(beta_temp)
-    beta_var_list.append(beta_var_new)
-    for tt in range(1,len(phi_new_list[0])):
-        temp_varphi = []
-        temp_eta = []
-        for kk in range(len(beta)):
-            temp_varphi.append(np.sqrt(phi_new_list[kk][tt]/phi_new_list[kk][tt-1])*varphi_old[ii])
-            temp_eta.append((1-varphi_old[ii])**2*phi_new_list[kk][tt])
-        varphi_t = np.diag(temp_varphi)
-        Q_t = np.diag(temp_eta)
-        beta_temp_old = np.dot(varphi_t,beta_new_list[tt-1])
-        beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
-        K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]))
-        beta_temp = beta_temp_old + np.dot(K_k,y[tt]-np.dot(zip(*x)[tt],beta_temp_old))
-        beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[tt]])),beta_var)
-        beta_new_list.append(beta_temp)
-        beta_var_list.append(beta_var_new)
-        
-        beta_final_list.append(list(stats.multivariate_normal.rvs(mean=beta_temp,cov=beta_var_new,size=1)))
-    
-##计算p(y|...)的条件概率
+#Step 4 and 5
+    #调用卡尔曼滤波函数，注意实际穿入的是 sigma 而不是 sigma_square
+    beta_phi_old_simga_old,p_y_phi_old_sigma_old = ClacKalmanFilter(beta,phi_old_list,varphi_old,sigma_old,x,y)
+    beta_phi_new_sigma_old,p_y_phi_new_sigma_old = ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_old,x,y)
+    beta_phi_old_simga_new,p_y_phi_old_sigma_new = ClacKalmanFilter(beta,phi_old_list,varphi_old,sigma_new,x,y)
+    beta_phi_new_sigma_new,p_y_phi_new_sigma_new = ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_new,x,y)
 
-        vt=(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt]])+sigma_square[tt])**0.5
-        et=y[tt]-np.dot(zip(*x)[tt],beta_var)
-        SumTemp_new=SumTemp_new+(np.log(vt)+et**2/vt)
-    
-    beta_final_list = list(np.array(beta_final_list).T)
-    print "beta_final_list"
-    print len(beta_final_list)
-    print beta_final_list
-    
-    X0=np.array(zip(*x)[0])
-    vt_0=vt=(np.dot(np.dot(Xt,var_beta_temp[0]),X0)+temp_sigma[0]**2)**0.5
-    SumTemp_new=SumTemp_new+(np.log(vt_0)+y[0]**2/vt_0)
-    print SumTemp_new
-    print beta
+    print "beta_phi_sigma:\n"
+    #print beta_phi_old_simga_old
+    #print beta_phi_old_simga_new
+    #print beta_phi_new_sigma_old
+    #print beta_phi_new_sigma_new
 
-    Py_condition_new=np.exp(-0.5*SumTemp_new)
-    print"Py_condition_new:",Py_condition_new
+##计算两个接受概率，由于伪代码原因，ap与ap_sigma求不出！！！这里跑不通！！
+    prior_theta=1
+    prior_theta_sigma=lambda_sigma_old**3*np.exp(-3*lambda_sigma_old)*u_sigma_old*(1+u_sigma_old)**-1.5*rou_sigma_old**38*(1-rou_sigma_old**2)
+    for ii in range(len(beta)):
+        prior_theta=prior_theta*lambda_old**2*(0.5+lambda_old)**-4*u_old**lambda_star*np.exp(-u_old*lambda_star/u_star)*rou_old**77.6*(1-rou_old)**2.4*varphi_old**77.6*(1-varphi_old)**2.4
+
+    s_xi_new=[]
+    xi_new =[]
+    for jj in range(len(beta)):
+        xi_ap = stats.binom(1,ap)
+        temp = xi_ap.rvs(1)
+        # 依据接受概率update  xi
+        if temp[0]==1:
+            xi_new.append(xi_new_temp[jj])
+        else:
+            xi_new.append(xi_old[jj])
+##更新s_xi标量
+        s_xi_new.append(np.exp(np.log(s_xi_old_list[jj])+iterNum**-eta*(ap-alpha_hat)))
+
+##更新xi_sigma以及s_xi_sigma
+    xi_sigma_new=[]
+    xi_sigma_ap = stats.binom(1,ap_sigma)
+    temp = xi_sigma_ap.rvs(1)
+    if temp[0]==1:
+        xi_sigma_new=xi_sigma_1
+    else:
+        xi_sigma_new=xi_sigma_old
+    s_xi_sigma_new=np.exp(np.log(s_xi_sigma_old)+iterNum**-eta_sigma*(ap_sigma-alpha_hat_sigma))
+
+    return xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new,beta_phi_new_sigma_new
 
 
 
@@ -685,7 +729,7 @@ if __name__ =='__main__':
         # xi_sigma_new is 1-dim s_xi_new is 1-dim, either
         # s_xi_sigma_new is const
         print "update theta,beta"
-        xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new = UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new,x,y,sigma_square)
+        xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new, beta_new = UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new,x,y)
         #还原 xi 到变量中
         # xi_new 是二维数组
         lambda_new = np.exp(zip(*xi_new)[0])
@@ -696,8 +740,6 @@ if __name__ =='__main__':
         lambda_sigma_new = np.exp(xi_sigma_new[0])
         u_sigma_new = np.exp(xi_sigma_new[1])
         rou_sigma_new =np.exp(xi_sigma_new[2])
-
-        beta_new = UpdateBeta(phi_new,varphi_new,T)
 
         print "beta:"
         print beta_new
