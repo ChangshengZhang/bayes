@@ -243,23 +243,22 @@ def UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma):
             h = k_sigma[t-1]+lambda_sigma-0.5
         else:
             h = k_sigma[t] +k_sigma[t-1]+lambda_sigma-0.5
-
-        #cont 的上确界在几百左右，故取1000
-        cont = 1000
+        
+        # 舍选法经过验证，误差较小
+        #cont 的上确界在几百左右，故取2000
+        cont = 2000
         flag = 1
         while flag:
             u_random = random.uniform(0,1)
-            v_random_temp = stats.gamma.rvs(1,size =1)
-
-
-            v_random =v_random_temp[0]
+            v_random = stats.gamma.rvs(1,size =1)[0]
 
             fY = (1.0*c/d)**(1.0*h/2)/(2*spec.kv(h,(c*d)**0.5))*v_random**(h-1)*np.exp(-0.5*(c*v_random+1.0*d/v_random))
             gY = np.exp(-1.0*v_random)
             
-            print "u_random:",u_random,fY,gY
+            #print "u_random:",u_random,fY,gY
             if u_random <= fY/(cont*gY):
                 #要开方处理
+                #print "sigma_t^2:",v_random
                 sigma_new.append(v_random**0.5)
                 sigma_new_2.append(v_random)
                 flag =0
@@ -414,6 +413,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
         #xi_old 是一个三维数组，第一个是 迭代次数，第二个是 ii，第三个是4，要取出第二个参数
         S_xi = np.cov(np.array(zip(*xi_old)[ii]).T)
         xi_i_1 = stats.multivariate_normal.rvs(mean=xi_i,cov=np.dot(s_xi_old,S_xi),size=1)
+        print "xi_i_1",xi_i_1
         xi_new_temp.append(xi_i_1) 
         # step 3
 
@@ -520,7 +520,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
         if temp[0]==1:
             xi_new.append(xi_new_temp[jj])
         else:
-            xi_new.append(xi_old[jj])
+            xi_new.append(xi_old[-1][jj])
 ##更新s_xi标量
         s_xi_new.append(np.exp(np.log(s_xi_old_list[jj])+iterNum**-eta*(ap-alpha_hat)))
 ##更新xi_sigma以及s_xi_sigma
@@ -530,7 +530,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
     if temp[0]==1:
         xi_sigma_new=xi_sigma_1
     else:
-        xi_sigma_new=xi_sigma_old
+        xi_sigma_new=xi_sigma_old[-1]
     s_xi_sigma_new=np.exp(np.log(s_xi_sigma_old)+iterNum**-eta_sigma*(ap_sigma-alpha_hat_sigma))
 
     return xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new,beta_phi_new_sigma_new
@@ -572,17 +572,22 @@ def UpdateLambda(lambda_star_old,tao_lambda_star_old,s_star,u_star,m,u,eta,alpha
     temp =1.0
     for item in u:
         temp = temp*item**lambda_star_old
-
+    
     p_lambda_star = np.exp(-1.0*lambda_star_old/s_star)*(((lambda_star_old**lambda_star_old)/(u_star**lambda_star_old*spec.gamma(lambda_star_old)))**m)*np.exp(-1.0*lambda_star_old/u_star*sum(u))*temp
 
     temp =1.0
     for item in u:
         temp = temp*item**lambda_star
-
+   
+    print "test:"
+    print temp
+    print sum(u)
+    print -1.0*lambda_star/u_star*sum(u)
+    print "\n"
     p_lambda_star_new = np.exp(-1.0*lambda_star/s_star)*(((lambda_star**lambda_star)/(u_star**lambda_star*spec.gamma(lambda_star)))**m)*np.exp(-1.0*lambda_star/u_star*sum(u))*temp
+    print "p_lambda_star:", p_lambda_star
     print "p_lambda_star_new:",p_lambda_star_new
     ap = min(1,p_lambda_star_new/p_lambda_star)
-
     # step 3
 
     y_AP = stats.binom(1,ap)
@@ -616,6 +621,8 @@ if __name__ =='__main__':
         temp_x_list.append(temp_x)
     x = map(list,zip(*temp_x_list))
     #beta
+    #beta 存放的是初值，后续不需要更改
+    #最终的生成的beta 添加到beta_list 里面
     beta_0 = [0]
     beta_1 = [0]
     beta_2 = [stats.norm.rvs(loc=2,scale=0.5,size=1)[0]]
@@ -636,6 +643,7 @@ if __name__ =='__main__':
         beta_4.append(0)
         beta_5.append(0)
     beta= [beta_0,beta_1,beta_2,beta_3,beta_4,beta_5]
+    beta_list = []
 
     lambda_old = 2
     alpha_hat = 0.3
@@ -736,6 +744,9 @@ if __name__ =='__main__':
         xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new, beta_new = UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new,x,y)
         #还原 xi 到变量中
         # xi_new 是二维数组
+        print "xi_new,",xi_new
+        xi_old.append(xi_old)
+        s_xi_old.append(s_xi_new)
         lambda_new = np.exp(zip(*xi_new)[0])
         u_new = np.exp(zip(*xi_new)[1])
         rou_new = np.exp(zip(*xi_new)[2])/(np.exp(zip(*xi_new)[2])+1)
@@ -744,15 +755,13 @@ if __name__ =='__main__':
         lambda_sigma_new = np.exp(xi_sigma_new[0])
         u_sigma_new = np.exp(xi_sigma_new[1])
         rou_sigma_new =np.exp(xi_sigma_new[2])
-
-        print "beta:"
-        print beta_new
-        print "\n"
+        
+        print "beta_new:"
+        print beta_new 
 
         # u_i 不等于 u，u_i是2.5得到的
         u_star_new, tao_u_star_new = UpdateU_star(u_star,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha_hat)
-        print "u_star_new:",u_star_new
-        print "u_new:",u_new
+        
         lambda_star_new,tao_lambda_star_new = UpdateLambda(lambda_star,tao_lambda_star,s_star,u_star_new,m,u_new,eta,alpha_hat,iterNum)
 
         #在这里更新变量
@@ -762,7 +771,7 @@ if __name__ =='__main__':
         tao_phi_old = copy.deepcopy(tao_phi_new)
         lambda_old = copy.deepcopy(lambda_new)
         k_old = copy.deepcopy(k_new)
-        beta = copy.deepcopy(beta_new)
+        #beta = copy.deepcopy(beta_new)
         u = copy.deepcopy(u_new)
         rou_old = copy.deepcopy(rou_new)
         varphi_old =copy.deepcopy(varphi_new)
@@ -778,18 +787,9 @@ if __name__ =='__main__':
         lambda_star = copy.deepcopy(lambda_star_new)
         tao_lambda_star = copy.deepcopy(tao_lambda_star_new)
 
+        beta_list.append(beta_new)
     #print lambda_star_new
     #print tao_lambda_star_new
-
+    print "beta new:", beta_list
     print "\nfinished!\n"
-
-
-    #### the author's configuration
-    # m = 5
-    # T = 1000
-    #
-    # mul_var = stats.multivariate_normal(mean=[0,0,0,0,0],cov=np.identity(5))
-    # temp_x = mul_var.rvs(T)
-    # x = map(list,zip(*temp_x))
-    # beta
 
