@@ -333,6 +333,9 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
             temp_eta.append((1-varphi_old[kk])**2*phi_new_list[kk][tt])
         varphi_t = np.diag(temp_varphi)
         Q_t = np.diag(temp_eta)
+        print "varphi"
+        print varphi_t
+        print beta_new_list[tt-1]
         beta_temp_old = np.dot(varphi_t,beta_new_list[tt-1])
         beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
         K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2))
