@@ -46,12 +46,10 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         temp_b = np.exp(-1.0*phi_old[0]*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_old[0])**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
         p_Phi_i1 =temp_a*temp_b*np.exp(-0.5*((beta_old[0]**2)/phi_old[0]+temp_c))
-        print p_Phi_i1
         temp_a = phi_i1_new_temp**(lambda_old+k_old[0]-1.5)
         temp_b = np.exp(-1.0*phi_i1_new_temp*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_i1_new_temp)**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
         p_Phi_i1_new =temp_a*temp_b*np.exp(-0.5*((beta_old[0]**2)/phi_i1_new_temp+temp_c))
-        print p_Phi_i1_new
         ap_phi = min(1,1.0*p_Phi_i1_new/p_Phi_i1)
 
         # step 3
@@ -73,18 +71,16 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
             phi_it_new_temp = np.exp(stats.norm.rvs(loc=np.log(phi_old[t]),scale = np.sqrt(tao_phi_old[t]),size=1)[0])
             # step 2
             temp_a = phi_old[t]**(lambda_old+k_old[t-1]+k_old[t]-1.5)
-            #print temp_a
             temp_b = np.exp(-1.0*phi_old[t]*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_old[t])**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_old[t]/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_old[t]*(1-varphi**2))
             p_Phi_it =temp_a*temp_b*np.exp(-0.5*(temp_c+temp_d))
-            #print p_Phi_it 
+            
             temp_a = phi_it_new_temp**(lambda_old+k_old[t-1]+k_old[t]-1.5)
             temp_b = np.exp(-1.0*phi_it_new_temp*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_it_new_temp)**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_it_new_temp/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_it_new_temp*(1-varphi**2))
             p_Phi_it_new =temp_a*temp_b*np.exp(-0.5*(temp_c+temp_d))
-            #print p_Phi_it_new
 
             ap_phi = min(1,float(1.0*p_Phi_it_new/p_Phi_it))
 
@@ -278,11 +274,8 @@ def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2
         else:
             d_k =-1
         
-        print "z_sigma_old[t]:",z_sigma_old[t]
-        
         k_sigma_new_temp = k_sigma_old[t]+d_k*stats.geom.rvs(1.0/(1+z_sigma_old[t]),loc=-1,size=1)[0]
         
-        print k_sigma_new_temp
         # step 3
         if k_sigma_new_temp < 0:
             k_sigma_new.append(k_sigma_old[t])
@@ -331,19 +324,24 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
     beta_var_list.append(beta_var_new)
     
     vt_0=(np.dot(np.dot(zip(*x)[0],beta_var),zip(*x)[0])+sigma_square[0]**2)**0.5
-    
+
     for tt in range(1,len(phi_new_list[0])):
         temp_varphi = []
         temp_eta = []
         for kk in range(len(beta)):
-            temp_varphi.append(np.sqrt(phi_new_list[kk][tt]/phi_new_list[kk][tt-1])*varphi_old[ii])
-            temp_eta.append((1-varphi_old[ii])**2*phi_new_list[kk][tt])
+            temp_varphi.append(np.sqrt(phi_new_list[kk][tt]/phi_new_list[kk][tt-1])*varphi_old[kk])
+            temp_eta.append((1-varphi_old[kk])**2*phi_new_list[kk][tt])
         varphi_t = np.diag(temp_varphi)
         Q_t = np.diag(temp_eta)
         beta_temp_old = np.dot(varphi_t,beta_new_list[tt-1])
         beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
         K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2))
         beta_temp = beta_temp_old + np.dot(K_k,y[tt]-np.dot(zip(*x)[tt],beta_temp_old))
+        print "K_k, beta_var" 
+        print beta_temp_old
+        print K_k
+        print beta_var
+
         beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[tt]])),beta_var)
         beta_new_list.append(beta_temp)
         beta_var_list.append(beta_var_new)
@@ -359,8 +357,7 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
     
     SumTemp_new=SumTemp_new+(np.log(vt_0)+y[0]**2/vt_0)
     SumTemp_new = -0.5*SumTemp_new 
-    #Py_condition_new=np.exp(-0.5*SumTemp_new)
-    #print"Py_condition_new:",Py_condition_new
+    
     return beta_final_list,SumTemp_new
 
 # xi_old 是三维数组
@@ -404,6 +401,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
         #S_xi的type 是array，4*4
         #xi_old 是一个三维数组，第一个是 迭代次数，第二个是 ii，第三个是4，要取出第二个参数
         S_xi = np.cov(np.array(zip(*xi_old)[ii]).T)
+        print "S_xi:",S_xi
         xi_i_1 = stats.multivariate_normal.rvs(mean=xi_i,cov=np.dot(s_xi_old,S_xi),size=1)
         print "xi_i_1",xi_i_1
         xi_new_temp.append(xi_i_1) 
@@ -482,9 +480,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
             temp = stats.beta.rvs(lambda_sigma_new+k_sigma_new[t-1],lambda_sigma_old+k_sigma_old[t-1]-lambda_sigma_new-k_sigma_new[t-1],size=1)
             sigma_new.append(temp[0]*lambda_sigma_new*u_sigma_new*(1+rou_sigma_divide_old)/(lambda_sigma_old*u_sigma_old*(1+rou_sigma_divide_new)))
 
-    print sigma_new,len(sigma_new)
-    print k_sigma_new,len(k_sigma_new)
-#Step 4 and 5
+    #Step 4 and 5
     #调用卡尔曼滤波函数，注意实际穿入的是 sigma 而不是 sigma_square
     beta_phi_old_simga_old,p_y_phi_old_sigma_old = ClacKalmanFilter(beta,phi_old_list,varphi_old,sigma_old,x,y)
     beta_phi_new_sigma_old,p_y_phi_new_sigma_old = ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_old,x,y)
@@ -502,8 +498,6 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
 
     ap=min(1,np.exp(p_y_phi_new_sigma_old-p_y_phi_old_sigma_old )*prior_theta_new/prior_theta_old)
     ap_sigma=min(1,np.exp(p_y_phi_old_sigma_new-p_y_phi_old_sigma_old)*prior_theta_sigma_new/prior_theta_sigma)
-    print "ap:",ap 
-    print "ap_sigma:",ap_sigma
     s_xi_new=[]
     xi_new =[]
     for jj in range(len(beta)):
@@ -572,14 +566,7 @@ def UpdateLambda(lambda_star_old,tao_lambda_star_old,s_star,u_star,m,u,eta,alpha
     for item in u:
         temp = temp*item**lambda_star
    
-    print "test:"
-    print temp
-    print sum(u)
-    print -1.0*lambda_star/u_star*sum(u)
-    print "\n"
     p_lambda_star_new = np.exp(-1.0*lambda_star/s_star)*(((lambda_star**lambda_star)/(u_star**lambda_star*spec.gamma(lambda_star)))**m)*np.exp(-1.0*lambda_star/u_star*sum(u))*temp
-    print "p_lambda_star:", p_lambda_star
-    print "p_lambda_star_new:",p_lambda_star_new
     ap = min(1,p_lambda_star_new/p_lambda_star)
     # step 3
 
@@ -677,9 +664,10 @@ if __name__ =='__main__':
             temp_z_old.append(random.uniform(0.3,0.7))
         z_old.append(temp_z_old)
 
-    # 初值有待改进  
-    xi_old  = list(np.random.random((100,6,4)))
+    # 初值有待改进
+    xi_old = list(np.random.random((100,6,4)))
     xi_sigma_old = list(np.random.random((100,3)))
+    
     s_xi_old = [1,1,1,1,1,1]
     s_xi_sigma_old = 1
     
@@ -720,25 +708,23 @@ if __name__ =='__main__':
         phi_new,tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta,u,rou_old,varphi_old,iterNum,eta,alpha_hat,T)
         print "update kappa:"
         k_new,z_new = UpdateK(k_old,z_old,T,lambda_old,rou_old,u,phi_new,alpha_hat,iterNum,eta)
-        print"k_new:"
-        print k_new
+        #print"k_new:"
         #print "update sgima^2"
+        print "update sigma squri:"
         temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma)
-        print "sigma_new:"
         #print temp_sigma
-        print "update kappa^{sgima}"
+        print "update kappa^{sgima}:"
         k_sigma_new,z_sigma_new = UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_square,iterNum,eta,alpha_hat,T)
 
         #2.5
         #xi_new is 2-dim
         # xi_sigma_new is 1-dim s_xi_new is 1-dim, either
         # s_xi_sigma_new is const
-        print "update theta,beta"
+        print "update theta,beta:"
         xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new, beta_new = UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new,x,y)
         #还原 xi 到变量中
         # xi_new 是二维数组
-        print "xi_new,",xi_new
-        xi_old.append(xi_old)
+        xi_old.append(xi_new)
         s_xi_old.append(s_xi_new)
         lambda_new = np.exp(zip(*xi_new)[0])
         u_new = np.exp(zip(*xi_new)[1])
@@ -775,7 +761,8 @@ if __name__ =='__main__':
         tao_u_star = copy.deepcopy(tao_u_star_new)
         lambda_star = copy.deepcopy(lambda_star_new)
         tao_lambda_star = copy.deepcopy(tao_lambda_star_new)
-
+        
+        print "beta new:",beta_new
         beta_list.append(beta_new)
     #print lambda_star_new
     #print tao_lambda_star_new
