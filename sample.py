@@ -155,9 +155,6 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
     k_new_list = []
     z_new_list = []
 
-    print lambda_old_list
-    print "len k_old_list:",len(k_old_list)
-
     for ii in range(len(k_old_list)):
         #同phi，降维
         k_old = copy.deepcopy(k_old_list[ii])
@@ -178,11 +175,8 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
             else:
                 d_k = -1
 
-            epsilon_K = stats.geom(1.0/(1+z_old[t]))
-            epsilon = epsilon_K.rvs(1)
-
+            epsilon = stats.geom.rvs(1.0/(1+z_old[t]),loc=-1,size=1)
             k_new_temp = k_old[t]+d_k*epsilon[0]
-
 
             # step 3 and step 4
             if k_new_temp < 0:
@@ -213,7 +207,6 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
         k_new_list.append(k_new)
         z_new_list.append(z_new)
 
-    print "len k_new_list:",len(k_new_list)
     return  k_new_list, z_new_list
 
 
@@ -251,7 +244,6 @@ def UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma):
         while flag:
             u_random = random.uniform(0,1)
             v_random = stats.gamma.rvs(1,size =1)[0]
-
             fY = (1.0*c/d)**(1.0*h/2)/(2*spec.kv(h,(c*d)**0.5))*v_random**(h-1)*np.exp(-0.5*(c*v_random+1.0*d/v_random))
             gY = np.exp(-1.0*v_random)
             
@@ -285,12 +277,12 @@ def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2
             d_k = 1
         else:
             d_k =-1
-
-        epsilon_K = stats.geom(1.0/(1+z_sigma_old[t]))
-        epsilon = epsilon_K.rvs(1)
-
-        k_sigma_new_temp = k_sigma_old[t]+d_k*epsilon[0]
-
+        
+        print "z_sigma_old[t]:",z_sigma_old[t]
+        
+        k_sigma_new_temp = k_sigma_old[t]+d_k*stats.geom.rvs(1.0/(1+z_sigma_old[t]),loc=-1,size=1)[0]
+        
+        print k_sigma_new_temp
         # step 3
         if k_sigma_new_temp < 0:
             k_sigma_new.append(k_sigma_old[t])
@@ -461,6 +453,7 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
     xi_sigma = [np.log(lambda_sigma_old),np.log(u_sigma_old),np.log(rou_sigma_old)-np.log(1-rou_sigma_old)]
     S_xi_sigma = np.cov(np.array(xi_sigma_old).T)
     xi_sigma_1 = stats.multivariate_normal.rvs(mean=xi_sigma,cov= np.dot(s_xi_sigma_old,S_xi_sigma),size=1)
+    print "xi_sigma_1:",xi_sigma_1
     lambda_sigma_new = np.exp(xi_sigma_1[0])
     u_sigma_new = np.exp(xi_sigma_1[1])
     rou_sigma_divide_new = np.exp(xi_sigma_1[2])
@@ -714,11 +707,11 @@ if __name__ =='__main__':
     print "k_old"
     print k_old
 
-    eta = random.uniform(0.5,1)
-    eta_sigma = random.uniform(0.5,1)
+    eta = 0.55
+    eta_sigma = 0.3
     z_sigma_old = []
     for ii in range(T):
-        z_sigma_old.append(random.uniform(0,1))
+        z_sigma_old.append(4*1.0/3)
 
     for ii in range(1000):
         print "It is the "+str(ii) + " 's iteration." 
@@ -754,11 +747,8 @@ if __name__ =='__main__':
 
         lambda_sigma_new = np.exp(xi_sigma_new[0])
         u_sigma_new = np.exp(xi_sigma_new[1])
-        rou_sigma_new =np.exp(xi_sigma_new[2])
+        rou_sigma_new =np.exp(xi_sigma_new[2])/(np.exp(xi_sigma_new[2])+1)
         
-        print "beta_new:"
-        print beta_new 
-
         # u_i 不等于 u，u_i是2.5得到的
         u_star_new, tao_u_star_new = UpdateU_star(u_star,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha_hat)
         
@@ -771,7 +761,6 @@ if __name__ =='__main__':
         tao_phi_old = copy.deepcopy(tao_phi_new)
         lambda_old = copy.deepcopy(lambda_new)
         k_old = copy.deepcopy(k_new)
-        #beta = copy.deepcopy(beta_new)
         u = copy.deepcopy(u_new)
         rou_old = copy.deepcopy(rou_new)
         varphi_old =copy.deepcopy(varphi_new)
