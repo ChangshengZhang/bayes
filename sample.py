@@ -45,13 +45,14 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         temp_a = phi_old[0]**(lambda_old+k_old[0]-1.5)
         temp_b = np.exp(-1.0*phi_old[0]*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_old[0])**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
-        p_Phi_i1 =temp_a*temp_b*np.exp(-0.5*((beta_old[0]**2)/phi_old[0]+temp_c))
+        # 取对数，防止溢出！！！
+        p_Phi_i1 =np.log(temp_a)+np.log(temp_b)-0.5*((beta_old[0]**2)/phi_old[0]+temp_c)
         temp_a = phi_i1_new_temp**(lambda_old+k_old[0]-1.5)
         temp_b = np.exp(-1.0*phi_i1_new_temp*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_i1_new_temp)**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
-        p_Phi_i1_new =temp_a*temp_b*np.exp(-0.5*((beta_old[0]**2)/phi_i1_new_temp+temp_c))
-        ap_phi = min(1,1.0*p_Phi_i1_new/p_Phi_i1)
-
+        p_Phi_i1_new =np.log(temp_a)+np.log(temp_b)-0.5*((beta_old[0]**2)/phi_i1_new_temp+temp_c)
+        
+        ap_phi = min(1,np.exp(p_Phi_i1_new-p_Phi_i1))
         # step 3
     
         temp_binom = stats.binom.rvs(1,ap_phi,size=1)[0]
@@ -74,16 +75,15 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
             temp_b = np.exp(-1.0*phi_old[t]*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_old[t])**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_old[t]/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_old[t]*(1-varphi**2))
-            p_Phi_it =temp_a*temp_b*np.exp(-0.5*(temp_c+temp_d))
+            p_Phi_it =np.log(temp_a)+np.log(temp_b)-0.5*(temp_c+temp_d)
             
             temp_a = phi_it_new_temp**(lambda_old+k_old[t-1]+k_old[t]-1.5)
             temp_b = np.exp(-1.0*phi_it_new_temp*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_it_new_temp)**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_it_new_temp/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_it_new_temp*(1-varphi**2))
-            p_Phi_it_new =temp_a*temp_b*np.exp(-0.5*(temp_c+temp_d))
+            p_Phi_it_new =np.log(temp_a)+np.log(temp_b)-0.5*(temp_c+temp_d)
 
-            ap_phi = min(1,float(1.0*p_Phi_it_new/p_Phi_it))
-
+            ap_phi = min(1,np.exp(p_Phi_it_new-p_Phi_it))
             # step 3
             
             temp_binom = stats.binom.rvs(1,ap_phi,size=1)[0]
@@ -112,20 +112,19 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         temp_a = phi_old[t]**(lambda_old+k_old[t-1]-1.5)
         temp_b = np.exp(-1.0*phi_old[t]*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[t]-varphi*((phi_old[t]/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_old[t]*(1-varphi**2))
-        p_Phi_it =temp_a*temp_b*np.exp(-0.5*temp_c)
+        p_Phi_it =np.log(temp_a)+np.log(temp_b)-0.5*temp_c
 
         temp_a = phi_it_new_temp**(lambda_old+k_old[t-1]-1.5)
         temp_b = np.exp(-1.0*phi_it_new_temp*lambda_old/(u*(1-rou)))
         temp_c =(beta_old[t]-varphi*((phi_it_new_temp/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_it_new_temp*(1-varphi**2))
-        p_Phi_it_new =temp_a*temp_b*np.exp(-0.5*temp_c)
+        p_Phi_it_new =np.log(temp_a)+np.log(temp_b)-0.5*temp_c
 
-        ap_phi = min(1,1.0*p_Phi_it_new/p_Phi_it)
+        ap_phi = min(1,np.exp(p_Phi_it_new-p_Phi_it))
 
         # step 3
 
-        yPhi = stats.binom(1,ap_phi)
-        temp  = yPhi.rvs(1)
-        if temp[0]==0:
+        temp = stats.binom.rvs(1,ap_phi,size=1)[0]
+        if temp == 1:
             phi_it_new = phi_it_new_temp
         else:
             phi_it_new = phi_old[t]
@@ -333,17 +332,17 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
             temp_eta.append((1-varphi_old[kk])**2*phi_new_list[kk][tt])
         varphi_t = np.diag(temp_varphi)
         Q_t = np.diag(temp_eta)
-        print "varphi"
-        print varphi_t
-        print beta_new_list[tt-1]
+        #print "varphi"
+        #print varphi_t
+        #print beta_new_list[tt-1]
         beta_temp_old = np.dot(varphi_t,beta_new_list[tt-1])
         beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
         K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2))
         beta_temp = beta_temp_old + np.dot(K_k,y[tt]-np.dot(zip(*x)[tt],beta_temp_old))
-        print "K_k, beta_var" 
-        print beta_temp_old
-        print K_k
-        print beta_var
+        #print "K_k, beta_var" 
+        #print beta_temp_old
+        #print K_k
+        #print beta_var
 
         beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[tt]])),beta_var)
         beta_new_list.append(beta_temp)
@@ -450,7 +449,8 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
                     temp = stats.beta.rvs(lambda_i_new+k_i_new[t],lambda_i_old+k_i_old[t]-lambda_i_new-k_i_new[t],size=1)
                     phi_new.append(lambda_i_new*u_i_new*(1+rou_divide_old)/(lambda_i_old*u_i_old*(1+rou_divide_new))*temp[0])
         phi_new_list.append(phi_new)
-    
+    print "phi_new_list" 
+    print phi_new_list
     xi_sigma = [np.log(lambda_sigma_old),np.log(u_sigma_old),np.log(rou_sigma_old)-np.log(1-rou_sigma_old)]
     S_xi_sigma = np.cov(np.array(xi_sigma_old).T)
     xi_sigma_1 = stats.multivariate_normal.rvs(mean=xi_sigma,cov= np.dot(s_xi_sigma_old,S_xi_sigma),size=1)
@@ -654,9 +654,9 @@ if __name__ =='__main__':
     lambda_sigma = 3 
     k_sigma = list(np.ones(T))
     u_sigma = 0.03
-    rou_sigma = stats.beta.rvs(38,2.0,size=1)[0]
+    rou_sigma = 0.95
     #生成phi,tao,k,z
-    tao_phi_old = 0.3*np.ones((m+1,T),dtype=np.int16)
+    tao_phi_old = 0.3*np.ones((m+1,T))
     phi_old_temp = []
     k_old_temp = []
     k_per_row = []
@@ -713,7 +713,7 @@ if __name__ =='__main__':
         k_new,z_new = UpdateK(k_old,z_old,T,lambda_old,rou_old,u,phi_new,alpha_hat,iterNum,eta)
         #print"k_new:"
         #print "update sgima^2"
-        print "update sigma squri:"
+        print "update sigma square:"
         temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma)
         #print temp_sigma
         print "update kappa^{sgima}:"
@@ -765,7 +765,7 @@ if __name__ =='__main__':
         lambda_star = copy.deepcopy(lambda_star_new)
         tao_lambda_star = copy.deepcopy(tao_lambda_star_new)
         
-        print "beta new:",beta_new
+        #print "beta new:",beta_new
         beta_list.append(beta_new)
     #print lambda_star_new
     #print tao_lambda_star_new
