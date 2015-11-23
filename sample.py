@@ -240,21 +240,22 @@ def UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma):
         cont = 500
         flag = 1
     
-        print "means:",np.sqrt(d)*spec.kv(h+1,np.sqrt(c*d))/np.sqrt(c)/spec.kv(h,np.sqrt(c*d))
+        #print "means:",np.sqrt(d)*spec.kv(h+1,np.sqrt(c*d))/np.sqrt(c)/spec.kv(h,np.sqrt(c*d))
 
         while flag:
             u_random = random.uniform(0,1)
-            v_random = stats.gamma.rvs(1.0,scale = 1+np.sqrt(d)*spec.kv(h+1,np.sqrt(c*d))/(np.sqrt(c)*spec.kv(h,np.sqrt(c*d))),size =1)[0]
+            v_random = stats.gamma.rvs(1.0,size =1)[0]
             #将分母移到下面，避免分母为0时出bug
             if v_random ==0:
                 fY = 0
             else:
                 fY = (1.0*c/d)**(1.0*h/2)/(2*spec.kv(h,np.sqrt(c*d)))*v_random**(h-1)*np.exp(-0.5*(c*v_random+1.0*d/v_random))
-            gY = np.exp(-1.0*v_random)
-            print "fygy",fY,gY
+            gY = cont*u_random*stats.gamma.pdf(v_random,1.0)
+
+            #print "fygy",fY,gY
             #print "const:", 1.0*fY/(u_random*gY)
             #print "u_random:",u_random,fY,gY
-            if u_random*cont*gY <= fY:
+            if gY <= fY:
                 #要开方处理
                 #print "sigma_t^2:",v_random
                 sigma_new.append(v_random**0.5)
