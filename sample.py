@@ -295,19 +295,18 @@ def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2
             z_sigma_new.append(z_sigma_old[t])
         else:
             # step 2
-            p_k_sigma = (lambda_sigma/((1-rou_sigma)*u_sigma))**k_sigma_old[t]*\
-            (sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))**k_sigma_old[t]\
-            *(sigma_2[t+1])**k_sigma_old[t]/(math.factorial(k_sigma_old[t])*spec.gamma(lambda_sigma+k_sigma_old[t]))
+            #p_k_sigma = (lambda_sigma/((1-rou_sigma)*u_sigma))**k_sigma_old[t]*(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))**k_sigma_old[t]*(sigma_2[t+1])**k_sigma_old[t]/(math.factorial(k_sigma_old[t])*spec.gamma(lambda_sigma+k_sigma_old[t]))
+            
+            p_k_sigma = k_sigma_old[t]*(np.log(lambda_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t+1]))-np.log(math.factorial(k_sigma_old[t])*spec.gamma(lambda_sigma+k_sigma_old[t]))
+            
+            p_k_sigma_new = k_sigma_new_temp*(np.log(lambda_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t+1]))-np.log(math.factorial(k_sigma_new_temp)*spec.gamma(lambda_sigma+k_sigma_new_temp))
 
-            p_k_sigma_new = (lambda_sigma/((1-rou_sigma)*u_sigma))**k_sigma_new_temp*\
-            (sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))**k_sigma_new_temp\
-            *(sigma_2[t+1])**k_sigma_new_temp/(math.factorial(k_sigma_new_temp)*spec.gamma(lambda_sigma+k_sigma_new_temp))
+            #p_k_sigma_new = (lambda_sigma/((1-rou_sigma)*u_sigma))**k_sigma_new_temp*(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))**k_sigma_new_temp*(sigma_2[t+1])**k_sigma_new_temp/(math.factorial(k_sigma_new_temp)*spec.gamma(lambda_sigma+k_sigma_new_temp))
 
 
-            ap = min(1,p_k_sigma_new/p_k_sigma)
+            ap = np.exp(min(0,p_k_sigma_new-p_k_sigma))
 
-            y_AP = stats.binom(1,ap)
-            temp = y_AP.rvs(1)
+            temp = stats.binom.rvs(1,ap,size=1)
             if temp[0] ==1:
                 k_sigma_new.append(k_sigma_new_temp)
             else:
