@@ -13,6 +13,9 @@ import math
 import random
 import copy
 
+from rpy2.robjects.packages import importr 
+import rpy2.robjects as robjects
+
 # phi、tao、k，beta 是二维数组
 # lambda、u、rou、varphi是一维数组
 # iterNum 是迭代次数，eta,T,alpha_hat 为常数
@@ -181,8 +184,7 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
         k_new =  []
         z_new =  []
         for t in range(T-1):
-            dK = stats.binom(1,0.5)
-            temp = dK.rvs(1)
+            temp = stats.binom.rvs(1,0.5,size=1)
             d_k = 0
             if temp[0] ==0:
                 d_k = 1
@@ -195,18 +197,16 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
             # step 3 and step 4
             if k_new_temp < 0:
                 k_new.append(k_old[t])
-
                 z_new.append(z_old[t])
 
             else:
-                p_k = (lambda_old/((1-rou)*u))**k_old[t]*(phi[t]*lambda_old*rou/((1-rou)*u))**k_old[t]*phi[t+1]/(math.factorial(k_old[t])*spec.gamma(lambda_old+k_old[t]))
+                p_k = k_old[t]*(np.log(lambda_old/(1-rou)/u)+np.log(phi[t]*lambda_old*rou/(1-rou)/u))+np.log(phi[t+1])-np.log(float(math.factorial(k_old[t])))-np.log(float(spec.gamma(lambda_old+k_old[t])))
+                #p_k = (lambda_old/((1-rou)*u))**k_old[t]*(phi[t]*lambda_old*rou/((1-rou)*u))**k_old[t]*phi[t+1]/(math.factorial(k_old[t])*spec.gamma(lambda_old+k_old[t]))
+                p_k_new = k_new_temp*(np.log(lambda_old/(1-rou)/u)+np.log(phi[t]*lambda_old*rou)-np.log((1-rou)*u))+np.log(phi[t+1])-np.log(float(math.factorial(k_new_temp)))-np.log(float(spec.gamma(lambda_old+k_new_temp)))
+                #p_k_new = (lambda_old/((1-rou)*u))**k_new_temp*(phi[t]*lambda_old*rou/((1-rou)*u))**k_new_temp*phi[t+1]/(math.factorial(k_new_temp)*spec.gamma(lambda_old+k_new_temp))
 
-                p_k_new = (lambda_old/((1-rou)*u))**k_new_temp*(phi[t]*lambda_old*rou/((1-rou)*u))**k_new_temp*phi[t+1]/(math.factorial(k_new_temp)*spec.gamma(lambda_old+k_new_temp))
-
-                ap = min(1,p_k_new/p_k)
-
-                y_AP = stats.binom(1,ap)
-                temp = y_AP.rvs(1)
+                ap = np.exp(min(0,p_k_new-p_k))
+                temp = stats.binom.rvs(1,ap,size=1)
 
                 if temp[0] ==1:
                     k_new.append(k_new_temp)
@@ -221,7 +221,16 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
 
     return  k_new_list, z_new_list
 
+def GigSample(b,c,d):
+    rgig = importr("GeneralizedHyperbolic")
 
+    robjects.r('''
+        f<- function(b,c,d){
+            return(rgig(1,b,c,d))
+        }
+        ''')
+
+    return robjects.r['f'](b,c,d)
 # x,beta 是二维数组，
 # y,k_sigma 是一维数组
 # T，rou_sigma,u_sigma,lambda_sigma 是常数
@@ -230,6 +239,8 @@ def UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma):
     # 返回一个list，是sigma
     sigma_new =[]
     sigma_new_2 =[]
+
+    # Python call R
 
     for t in range(T):
         tempSum = 0
@@ -250,36 +261,11 @@ def UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma):
             h = k_sigma[t] +k_sigma[t-1]+lambda_sigma-0.5
         #print "cdh"
         #print c,d,h
-        # 舍选法经过验证，误差较小
-        #cont 的上确界在几百左右，故取2000
-        cont = 1000
-        flag = 1
-        mode = (h-1+np.sqrt((h-1)**2+c*d))/c
-        #print "means:",np.sqrt(d)*spec.kv(h+1,np.sqrt(c*d))/np.sqrt(c)/spec.kv(h,np.sqrt(c*d))
 
-        while flag:
-            u_random = random.uniform(0,1)
-            v_random = stats.gamma.rvs(mode+1,size =1)[0]
-            #将分母移到下面，避免分母为0时出bug
-            if v_random ==0:
-                fY = 0
-                continue;
-            else:
-                fY = (1.0*c/d)**(1.0*h/2)*v_random**(h-1)*np.exp(-0.5*(c*v_random+1.0*d/v_random))
-            gY = cont*u_random*stats.gamma.pdf(v_random,mode+1)*(2*spec.kv(h,np.sqrt(c*d)))
+        gig_sample = GigSample(d,c,h)[0]
+        sigma_new.append(np.sqrt(gig_sample))
+        sigma_new_2.append(gig_sample)
 
-            #print "fygy",fY,gY
-            #print "const:", 1.0*fY/(u_random*gY)
-            #print "u_random:",u_random,fY,gY
-            if gY <= fY:
-                #要开方处理
-                #print "sigma_t^2:",v_random
-                sigma_new.append(v_random**0.5)
-                sigma_new_2.append(v_random)
-                flag =0
-            else:
-                flag =1
-    #返回sigma 和sigma^2
     return sigma_new,sigma_new_2
 
 # sigma_2 表示方程 sigma^2
@@ -376,9 +362,9 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
         beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
         K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2))
         beta_temp = beta_temp_old + np.dot(K_k,y[tt]-np.dot(zip(*x)[tt],beta_temp_old))
-        print "K_k, beta_var" 
+        #print "K_k, beta_var" 
         #print beta_temp_old
-        print K_k
+        #print K_k
         #print beta_var
 
         beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[tt]])),beta_var)
@@ -570,10 +556,12 @@ def UpdateU_star(u_star_old,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha):
     log_u_star = log_u_star_X.rvs(1)
     u_star = np.exp(log_u_star[0])
 
-    p_u_star = (u_star_old+2*b_star)**(-3)*(1.0/u_star_old)**(m*lambda_star)*np.exp(-1.0*lambda_star/u_star_old*sum(u))
-    p_u_star_new = (u_star+2*b_star)**(-3)*(1.0/u_star)**(m*lambda_star)*np.exp(-1.0*lambda_star/u_star*sum(u))
-
-    ap = min(1,p_u_star_new/p_u_star)
+    #p_u_star = (u_star_old+2*b_star)**(-3)*(1.0/u_star_old)**(m*lambda_star)*np.exp(-1.0*lambda_star/u_star_old*sum(u))
+    #p_u_star_new = (u_star+2*b_star)**(-3)*(1.0/u_star)**(m*lambda_star)*np.exp(-1.0*lambda_star/u_star*sum(u))
+    
+    p_u_star = -3*np.log(u_star_old+2*b_star)-np.log(u_star_old)*m*lambda_star-1.0*lambda_star/u_star_old*sum(u)
+    p_u_star_new = -3*np.log(u_star+2*b_star)-np.log(u_star)*m*lambda_star-1.0*lambda_star/u_star*sum(u)
+    ap = np.exp(min(0,p_u_star_new-p_u_star))
 
     # step 3
 
@@ -599,19 +587,20 @@ def UpdateLambda(lambda_star_old,tao_lambda_star_old,s_star,u_star,m,u,eta,alpha
     for item in u:
         temp = temp*item**lambda_star_old
     
-    p_lambda_star = np.exp(-1.0*lambda_star_old/s_star)*(((lambda_star_old**lambda_star_old)/(u_star**lambda_star_old*spec.gamma(lambda_star_old)))**m)*np.exp(-1.0*lambda_star_old/u_star*sum(u))*temp
+    #p_lambda_star = np.exp(-1.0*lambda_star_old/s_star)*(((lambda_star_old**lambda_star_old)/(u_star**lambda_star_old*spec.gamma(lambda_star_old)))**m)*np.exp(-1.0*lambda_star_old/u_star*sum(u))*temp
 
+    p_lambda_star = -1.0*lambda_star_old/s_star+(np.log(lambda_star_old)*lambda_star_old-np.log(u_star)*lambda_star_old-np.log(spec.gamma(lambda_star_old)))*m-1.0*lambda_star_old/u_star*sum(u)+np.log(temp)
+    
     temp =1.0
     for item in u:
         temp = temp*item**lambda_star
-   
-    p_lambda_star_new = np.exp(-1.0*lambda_star/s_star)*(((lambda_star**lambda_star)/(u_star**lambda_star*spec.gamma(lambda_star)))**m)*np.exp(-1.0*lambda_star/u_star*sum(u))*temp
-    ap = min(1,p_lambda_star_new/p_lambda_star)
+    p_lambda_star_new = -1.0*lambda_star/s_star+m*(lambda_star*(np.log(lambda_star)-np.log(u_star))-np.log(spec.gamma(lambda_star)))-1.0*lambda_star/u_star*sum(u)+np.log(temp)
+    #p_lambda_star_new = np.exp(-1.0*lambda_star/s_star)*(((lambda_star**lambda_star)/(u_star**lambda_star*spec.gamma(lambda_star)))**m)*np.exp(-1.0*lambda_star/u_star*sum(u))*temp
+    ap = np.exp(min(0,p_lambda_star_new-p_lambda_star))
     # step 3
 
-    y_AP = stats.binom(1,ap)
+    temp = stats.binom.rvs(1,ap,size=1)
     lambda_star_new = lambda_star_old
-    temp = y_AP.rvs(1)
     if temp[0] ==1:
         lambda_star_new = lambda_star
 
