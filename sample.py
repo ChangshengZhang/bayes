@@ -200,9 +200,17 @@ def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alp
                 z_new.append(z_old[t])
 
             else:
-                p_k = k_old[t]*(np.log(lambda_old/(1-rou)/u)+np.log(phi[t]*lambda_old*rou/(1-rou)/u))+np.log(phi[t+1])-np.log(float(math.factorial(k_old[t])))-np.log(float(spec.gamma(lambda_old+k_old[t])))
+                fact_k_old = 0.0
+                for item in range(1,int(k_old[t])+1):
+                    fact_k_old = fact_k_old + np.log(1.0*item)
+                
+                fact_k_new = 0.0
+                for item in range(1,int(k_new_temp)+1):
+                    fact_k_new = fact_k_new + np.log(1.0*item)
+
+                p_k = k_old[t]*(np.log(lambda_old/(1-rou)/u)+np.log(phi[t]*lambda_old*rou/(1-rou)/u)+np.log(phi[t+1]))-fact_k_old-np.log(float(spec.gamma(lambda_old+k_old[t])))
                 #p_k = (lambda_old/((1-rou)*u))**k_old[t]*(phi[t]*lambda_old*rou/((1-rou)*u))**k_old[t]*phi[t+1]/(math.factorial(k_old[t])*spec.gamma(lambda_old+k_old[t]))
-                p_k_new = k_new_temp*(np.log(lambda_old/(1-rou)/u)+np.log(phi[t]*lambda_old*rou)-np.log((1-rou)*u))+np.log(phi[t+1])-np.log(float(math.factorial(k_new_temp)))-np.log(float(spec.gamma(lambda_old+k_new_temp)))
+                p_k_new = k_new_temp*(np.log(lambda_old/(1-rou)/u)+np.log(phi[t]*lambda_old*rou)-np.log((1-rou)*u)+np.log(phi[t+1]))-fact_k_new-np.log(float(spec.gamma(lambda_old+k_new_temp)))
                 #p_k_new = (lambda_old/((1-rou)*u))**k_new_temp*(phi[t]*lambda_old*rou/((1-rou)*u))**k_new_temp*phi[t+1]/(math.factorial(k_new_temp)*spec.gamma(lambda_old+k_new_temp))
 
                 ap = np.exp(min(0,p_k_new-p_k))
@@ -296,10 +304,16 @@ def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2
         else:
             # step 2
             #p_k_sigma = (lambda_sigma/((1-rou_sigma)*u_sigma))**k_sigma_old[t]*(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))**k_sigma_old[t]*(sigma_2[t+1])**k_sigma_old[t]/(math.factorial(k_sigma_old[t])*spec.gamma(lambda_sigma+k_sigma_old[t]))
+            fact_k_sigma_old = 0.0
+            fact_k_sigma_new = 0.0
+            for item in range(1,int(k_sigma_old[t])+1):
+                fact_k_sigma_old = fact_k_sigma_old + np.log(float(item))
+            for item in range(1,int(k_sigma_new_temp)+1):
+                fact_k_sigma_new = fact_k_sigma_new + np.log(float(item))
+
+            p_k_sigma = k_sigma_old[t]*(np.log(lambda_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t+1]))-fact_k_sigma_old - np.log(spec.gamma(lambda_sigma+k_sigma_old[t]))
             
-            p_k_sigma = k_sigma_old[t]*(np.log(lambda_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t+1]))-np.log(math.factorial(k_sigma_old[t])*spec.gamma(lambda_sigma+k_sigma_old[t]))
-            
-            p_k_sigma_new = k_sigma_new_temp*(np.log(lambda_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t+1]))-np.log(math.factorial(k_sigma_new_temp)*spec.gamma(lambda_sigma+k_sigma_new_temp))
+            p_k_sigma_new = k_sigma_new_temp*(np.log(lambda_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))+np.log(sigma_2[t+1]))-fact_k_sigma_new-np.log(spec.gamma(lambda_sigma+k_sigma_new_temp))
 
             #p_k_sigma_new = (lambda_sigma/((1-rou_sigma)*u_sigma))**k_sigma_new_temp*(sigma_2[t]*lambda_sigma*rou_sigma/((1-rou_sigma)*u_sigma))**k_sigma_new_temp*(sigma_2[t+1])**k_sigma_new_temp/(math.factorial(k_sigma_new_temp)*spec.gamma(lambda_sigma+k_sigma_new_temp))
 
@@ -315,7 +329,7 @@ def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2
             # step 4
             temp_z = z_sigma_old[t]+ iterNum**(-1.0*eta)*(ap-alpha)
             z_sigma_new.append(temp_z)
-
+    print "k_sigma_new:",k_sigma_new
     return  k_sigma_new,z_sigma_new
 
 def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
@@ -360,6 +374,11 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
         beta_temp_old = np.dot(varphi_t,beta_new_list[tt-1])
         beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
         K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2))
+        
+        for item in K_k:
+            if np.isnan(item):
+                print "K_k has nan"
+
         beta_temp = beta_temp_old + np.dot(K_k,y[tt]-np.dot(zip(*x)[tt],beta_temp_old))
         #print "K_k, beta_var" 
         #print beta_temp_old
@@ -440,7 +459,6 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
         u_i_new_list.append(u_i_new)
         rou_i_new_list.append(((rou_divide_new)**-1+1)**-1)
         varphi_i_new_list.append(((varphi_divide_new)**-1+1)**-1)
-
 
         phi_new = []
         k_i_new = []
