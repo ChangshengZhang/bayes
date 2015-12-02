@@ -12,7 +12,8 @@ import scipy.special as spec
 import math
 import random
 import copy
-
+import datetime
+import matplotlib.pyplot as plt
 from rpy2.robjects.packages import importr 
 import rpy2.robjects as robjects
 
@@ -47,22 +48,18 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         phi_i1_new_temp = np.exp(stats.norm.rvs(loc=np.log(phi_old[0]),scale = np.sqrt(tao_phi_old[0]),size=1)[0])
         # step 2
         
-        temp_a = phi_old[0]**(lambda_old+k_old[0]-1.5)
-        temp_b = np.exp(-1.0*phi_old[0]*lambda_old/(u*(1-rou)))
+        temp_a = np.log(phi_old[0])*(lambda_old+k_old[0]-1.5)
+        temp_b = -1.0*phi_old[0]*lambda_old/(u*(1-rou))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_old[0])**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
         # 取对数，防止溢出！！！
-        if temp_a == 0 or temp_b ==0:
-            p_Phi_i1 = -1000000
-        else:
-            p_Phi_i1 =np.log(temp_a)+np.log(temp_b)-0.5*((beta_old[0]**2)/phi_old[0]+temp_c)
         
-        temp_a = phi_i1_new_temp**(lambda_old+k_old[0]-1.5)
-        temp_b = np.exp(-1.0*phi_i1_new_temp*lambda_old/(u*(1-rou)))
+        p_Phi_i1 =temp_a+temp_b -0.5*((beta_old[0]**2)/phi_old[0]+temp_c)
+        
+        temp_a = np.log(phi_i1_new_temp)*(lambda_old+k_old[0]-1.5)
+        temp_b = -1.0*phi_i1_new_temp*lambda_old/(u*(1-rou))
         temp_c =(beta_old[1]-varphi*((phi_old[1]/phi_i1_new_temp)**0.5)*beta_old[0])**2/(phi_old[1]*(1-varphi**2))
-        if temp_a ==0 or temp_b ==0:
-            p_Phi_i1_new = -1000000
-        else:
-            p_Phi_i1_new =np.log(temp_a)+np.log(temp_b)-0.5*((beta_old[0]**2)/phi_i1_new_temp+temp_c)
+        
+        p_Phi_i1_new =temp_a+temp_b-0.5*((beta_old[0]**2)/phi_i1_new_temp+temp_c)
         
         ap_phi = np.exp(min(0,p_Phi_i1_new-p_Phi_i1))
         # step 3
@@ -82,23 +79,19 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
             # step 1
             phi_it_new_temp = np.exp(stats.norm.rvs(loc=np.log(phi_old[t]),scale = np.sqrt(tao_phi_old[t]),size=1)[0])
             # step 2
-            temp_a = phi_old[t]**(lambda_old+k_old[t-1]+k_old[t]-1.5)
-            temp_b = np.exp(-1.0*phi_old[t]*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
+            temp_a = np.log(phi_old[t])*(lambda_old+k_old[t-1]+k_old[t]-1.5)
+            temp_b = -1.0*phi_old[t]*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_old[t])**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_old[t]/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_old[t]*(1-varphi**2))
-            if temp_a == 0 or temp_b ==0:
-                p_Phi_it = -100000
-            else:
-                p_Phi_it =np.log(temp_a)+np.log(temp_b)-0.5*(temp_c+temp_d)
             
-            temp_a = phi_it_new_temp**(lambda_old+k_old[t-1]+k_old[t]-1.5)
-            temp_b = np.exp(-1.0*phi_it_new_temp*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u)))
+            p_Phi_it =temp_a+temp_b-0.5*(temp_c+temp_d)
+            
+            temp_a = np.log(phi_it_new_temp)*(lambda_old+k_old[t-1]+k_old[t]-1.5)
+            temp_b = -1.0*phi_it_new_temp*lambda_old/u*(1+(2*rou*lambda_old)/((1-rou)*u))
             temp_c =(beta_old[t+1]-varphi*((phi_old[t+1]/phi_it_new_temp)**0.5)*beta_old[t])**2/(phi_old[t+1]*(1-varphi**2))
             temp_d =(beta_old[t]-varphi*((phi_it_new_temp/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_it_new_temp*(1-varphi**2))
-            if temp_a ==0 or temp_b ==0:
-                p_Phi_it_new = -1000000
-            else:
-                p_Phi_it_new =np.log(temp_a)+np.log(temp_b)-0.5*(temp_c+temp_d)
+            
+            p_Phi_it_new =temp_a+temp_b-0.5*(temp_c+temp_d)
             
             ap_phi = np.exp(min(0,p_Phi_it_new-p_Phi_it))
             # step 3
@@ -126,22 +119,17 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         phi_it_new_temp = np.exp(logPhi_it_new[0])
 
         # step 2
-        temp_a = phi_old[t]**(lambda_old+k_old[t-1]-1.5)
-        temp_b = np.exp(-1.0*phi_old[t]*lambda_old/(u*(1-rou)))
+        temp_a = np.log(phi_old[t])*(lambda_old+k_old[t-1]-1.5)
+        temp_b = -1.0*phi_old[t]*lambda_old/(u*(1-rou))
         temp_c =(beta_old[t]-varphi*((phi_old[t]/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_old[t]*(1-varphi**2))
-        if temp_a == 0 or temp_b ==0:
-            p_Phi_it = -100000
-        else:
-            p_Phi_it =np.log(temp_a)+np.log(temp_b)-0.5*(temp_c+temp_d)
+        
+        p_Phi_it =temp_a+temp_b-0.5*(temp_c+temp_d)
             
-        temp_a = phi_it_new_temp**(lambda_old+k_old[t-1]-1.5)
-        temp_b = np.exp(-1.0*phi_it_new_temp*lambda_old/(u*(1-rou)))
+        temp_a = np.log(phi_it_new_temp)*(lambda_old+k_old[t-1]-1.5)
+        temp_b = -1.0*phi_it_new_temp*lambda_old/(u*(1-rou))
         temp_c =(beta_old[t]-varphi*((phi_it_new_temp/phi_old[t-1])**0.5)*beta_old[t-1])**2/(phi_it_new_temp*(1-varphi**2))
         
-        if temp_a == 0 or temp_b == 0:
-            p_Phi_it_new = -100000
-        else:
-            p_Phi_it_new =np.log(temp_a)+np.log(temp_b)-0.5*temp_c
+        p_Phi_it_new = temp_a+ temp_b -0.5*temp_c
 
         ap_phi = np.exp(min(0,p_Phi_it_new-p_Phi_it))
 
@@ -163,8 +151,6 @@ def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_
         tao_phi_new_list.append(tao_phi_new)
 
     return  phi_new_list, tao_phi_new_list
-
-
 
 # k,z,phi,是二维数组
 # lambda, rou, u, 是一维数组
@@ -343,7 +329,16 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
     
     beta_temp_old = np.zeros(len(beta))
     beta_var = np.diag(zip(*phi_new_list)[0])
+    
+    for ii in range(len(zip(*phi_new_list)[0])):
+        if np.isnan(beta_var[ii][ii]):
+            beta_var[ii][ii] = np.random.random()
+
     K_k = np.dot(np.dot(beta_var,zip(*x)[0]),1.0/(np.dot(np.dot(zip(*x)[0],beta_var),zip(*x)[0])+sigma_square[0]**2))
+    for item in K_k:
+        if np.isnan(item):
+            print "origin K_k has nan"
+            print K_k
     beta_temp = beta_temp_old+ np.dot(K_k,y[0]-np.dot(zip(*x)[0],beta_temp_old)) 
     beta_var_new = np.dot(np.identity(len(beta))-np.dot(np.array([K_k]).T,np.array([zip(*x)[0]])),beta_var)
     beta_final_list.append(list(stats.multivariate_normal.rvs(mean=beta_temp,cov=beta_var_new,size=1)))
@@ -362,7 +357,7 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
                 temp_temp_varphi = np.mean(temp_varphi)
 
             if np.isnan(temp_temp_varphi) or np.isinf(temp_temp_varphi):
-                temp_varphi.append(np.mean(temp_varphi))
+                temp_varphi.append(np.random.random())
             else:
                 temp_varphi.append(temp_temp_varphi)
 
@@ -375,11 +370,20 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
         beta_temp_old = np.dot(varphi_t,beta_new_list[tt-1])
         beta_var = np.dot(np.dot(varphi_t,beta_var_list[tt-1]),varphi_t)+Q_t
         K_k = np.dot(np.dot(beta_var,zip(*x)[tt]),1.0/(np.dot(np.dot(zip(*x)[tt],beta_var),zip(*x)[tt])+sigma_square[tt]**2))
+    
+        for item in temp_eta:
+            if np.isnan(item):
+                print "Q_t has nan"
+                print temp_eta
+        for item in temp_varphi:
+            if np.isnan(item):
+                print "varphi_t has nan"
+                print temp_varphi
         
         for item in K_k:
             if np.isnan(item):
                 print "K_k has nan"
-
+                print K_k
         beta_temp = beta_temp_old + np.dot(K_k,y[tt]-np.dot(zip(*x)[tt],beta_temp_old))
         #print "K_k, beta_var" 
         #print beta_temp_old
@@ -408,7 +412,7 @@ def ClacKalmanFilter(beta,phi_new_list,varphi_old,sigma_square,x,y):
 # beta，xi_sigma_old。phi_old，k_old 是二维数组
 # sigma_old，k_sigma_old，lambda_old，u_old，rou_old,varphi_old,s_xi_old是一维数组
 # alpha_hat,alpha_hat_sigma，iterNum,eta,eta_sigma，lambda_sigma_old,u_sigma_old, rou_sigma_old,s_xi_sigma_old 是常数
-def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigma_old,beta,lambda_old,u_old,rou_old,varphi_old,xi_old,s_xi_old_list,lambda_sigma_old,u_sigma_old,rou_sigma_old,xi_sigma_old,s_xi_sigma_old,phi_old_list,k_old_list,x,y,lambda_star,u_star):
+def UpdateTheta(u_star,lambda_star,alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigma_old,beta,lambda_old,u_old,rou_old,varphi_old,xi_old,s_xi_old_list,lambda_sigma_old,u_sigma_old,rou_sigma_old,xi_sigma_old,s_xi_sigma_old,phi_old_list,k_old_list,x,y):
     # step 1
 
     phi_new_list = []
@@ -474,13 +478,19 @@ def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigm
         for t in range(len(phi_old)-1):
 
             if rou_divide_new*phi_new[t]*lambda_i_new/u_i_new > rou_divide_old*phi_old[t]*lambda_i_old/u_i_old:
-                k_X= stats.poisson(rou_divide_new*phi_new[t]*lambda_i_new/u_i_new -rou_divide_old*phi_old[t]*lambda_i_old/u_i_old)
-                temp_sample = k_X.rvs(1)
+                temp_sample = stats.poisson.rvs(rou_divide_new*phi_new[t]*lambda_i_new/u_i_new -rou_divide_old*phi_old[t]*lambda_i_old/u_i_old,size=1)
                 k_i_new.append(k_i_old[t]+temp_sample[0])
 
             else:
-                k_X = stats.binom.rvs(k_i_old[t],rou_divide_new*phi_new[t]*lambda_i_new/u_i_new/(rou_divide_old*phi_old[t]*lambda_i_old/u_i_old),size =1)
-                k_i_new.append(k_X[0])
+                aaa = rou_divide_new*phi_new[t]*lambda_i_new/u_i_new/(rou_divide_old*phi_old[t]*lambda_i_old/u_i_old)
+                if np.isnan(aaa):
+                    if len(k_i_new)==0:
+                        k_i_new.append(1)
+                    else:
+                        k_i_new.append(k_i_new[-1])
+                else:
+                    k_X = stats.binom.rvs(k_i_old[t],rou_divide_new*phi_new[t]*lambda_i_new/u_i_new/(rou_divide_old*phi_old[t]*lambda_i_old/u_i_old),size =1)
+                    k_i_new.append(k_X[0])
 
             if t<len(phi_old)-1:
                 if lambda_i_new+k_i_new[t] > lambda_i_old + k_i_old[t]:
@@ -630,8 +640,21 @@ def UpdateLambda(lambda_star_old,tao_lambda_star_old,s_star,u_star,m,u,eta,alpha
     print "finished a iteration."
     return lambda_star_new,tao_lambda_star_new
 
+# Plot 某一次的beta
+def PlotBeta(beta):
+    for ii in range(len(beta)):
+        plt.figure(ii+1)
+        plt.plot(beta[ii])
+        plt.xlabel("T")
+        plt.ylabel("beta"+str(ii+1))
+        plt.grid(True)
+        plt.title("Beta")
+    plt.show()
 
 if __name__ =='__main__':
+    
+    starttime = datetime.datetime.now()
+
     #初始值
     T = 200
     #phi_old tao_phi_old 是二维数组,维度和x一样
@@ -677,6 +700,7 @@ if __name__ =='__main__':
     alpha_hat = 0.3
     alpha_hat_sigma = 0.3
     sigma = 1
+    total_iter_num = 15000
     #y
     y= []
     for ii in range(T):
@@ -751,7 +775,7 @@ if __name__ =='__main__':
     for ii in range(T):
         z_sigma_old.append(4*1.0/3)
 
-    for ii in range(10000):
+    for ii in range(total_iter_num):
         print "It is the "+str(ii) + " 's iteration." 
         iterNum = ii +1
         print "update phi:"
@@ -771,7 +795,7 @@ if __name__ =='__main__':
         # xi_sigma_new is 1-dim s_xi_new is 1-dim, either
         # s_xi_sigma_new is const
         print "update theta,beta:"
-        xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new,beta_new = UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new,x,y,lambda_star,u_star)
+        xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new,beta_new = UpdateTheta(u_star,lambda_star,alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new,x,y)
         #还原 xi 到变量中
         # xi_new 是二维数组
         xi_old.append(xi_new)
@@ -818,5 +842,20 @@ if __name__ =='__main__':
     #print lambda_star_new
     #print tao_lambda_star_new
     #print "beta new:", beta_list
+    temp_time = 5000
+    final_beta = []
+    for ii in range(len(beta_list[0])):
+        final_beta_per_row = []
+        for jj in range(T):
+            temp_sum = 0.0
+            for kk in range(temp_time,len(beta_list)):
+                temp_sum = temp_sum + beta_list[kk][ii][jj]
+            final_beta_per_row.append(temp_sum/(len(beta_list)-temp_time))
+        final_beta.append(final_beta_per_row)
+    print "final beta:" 
+    print final_beta
+    PlotBeta(final_beta)
     print "\nfinished!\n"
-
+    endtime = datetime.datetime.now()
+    print (endtime - starttime).seconds
+    

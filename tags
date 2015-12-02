@@ -1,0 +1,203 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+T	backup/sample copy.py	/^	T = 10$/;"	v
+T	sample.py	/^    T = 200$/;"	v
+UpdateBeta	backup/sample copy.py	/^def UpdateBeta(phi,varphi,T):$/;"	f
+UpdateBeta	sample.py	/^def UpdateBeta(phi_list,varphi_list,T):$/;"	f
+UpdateK	backup/sample copy.py	/^def UpdateK(k_old,z_old,T,lambda_old,rou,u,phi,alpha,iterNum,eta):$/;"	f
+UpdateK	sample.py	/^def UpdateK(k_old_list,z_old_list,T,lambda_old_list,rou_list,u_list,phi_list,alpha_hat,iterNum,eta):$/;"	f
+UpdateK_sigma	backup/sample copy.py	/^def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2,iterNum,eta,alpha,T):$/;"	f
+UpdateK_sigma	sample.py	/^def UpdateK_sigma(k_sigma_old,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_2,iterNum,eta,alpha,T):$/;"	f
+UpdateLambda	backup/sample copy.py	/^def UpdateLambda(lambda_star_old,tao,s_star,u_star,m,u,eta,alpha,iterNum):$/;"	f
+UpdateLambda	sample.py	/^def UpdateLambda(lambda_star_old,tao_lambda_star_old,s_star,u_star,m,u,eta,alpha,iterNum):$/;"	f
+UpdatePhi	backup/sample copy.py	/^def UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta_old,u,rou,varphi,iterNum,eta,alpha_phi_old,T):$/;"	f
+UpdatePhi	sample.py	/^def UpdatePhi(phi_old_list,tao_phi_old_list,lambda_old_list,k_old_list,beta_old_list,u_list,rou_list,varphi_list,$/;"	f
+UpdateSigma	backup/sample copy.py	/^def UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma):$/;"	f
+UpdateSigma	sample.py	/^def UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma):$/;"	f
+UpdateTheta	backup/sample copy.py	/^def UpdateTheta(m,alpha_theta,alpha_theta_sigma,alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigma_old,beta,lambda_i_old,u_i_old,rou_i_old$/;"	f
+UpdateTheta	sample.py	/^def UpdateTheta(alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,sigma_old,k_sigma_old,$/;"	f
+UpdateU_star	backup/sample copy.py	/^def UpdateU_star(u_star_old,u,tao,b_star,lambda_star,m,iterNum,eta,alpha):$/;"	f
+UpdateU_star	sample.py	/^def UpdateU_star(u_star_old,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha):$/;"	f
+alpha	backup/sample copy.py	/^	alpha = 0.3$/;"	v
+alpha_hat	backup/sample copy.py	/^	alpha_hat = 0.97$/;"	v
+alpha_hat	sample.py	/^    alpha_hat = 0.3$/;"	v
+alpha_hat_sigma	backup/sample copy.py	/^	alpha_hat_sigma = 0.97$/;"	v
+alpha_hat_sigma	sample.py	/^    alpha_hat_sigma = 0.3$/;"	v
+alpha_theta	backup/sample copy.py	/^	alpha_theta = 0.97$/;"	v
+alpha_theta_sigma	backup/sample copy.py	/^	alpha_theta_sigma = 0.97$/;"	v
+alphi_phi_old	backup/sample copy.py	/^	alphi_phi_old =[0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3]$/;"	v
+b_star	backup/sample copy.py	/^	b_star= 1$/;"	v
+b_star	sample.py	/^    b_star = 0.1$/;"	v
+beta	backup/sample copy.py	/^	beta = [[1,2,3,2,3,2,3,2,3,1],[2,3,4,2,3,2,3,2,3,1],[5,3,1,2,3,2,3,2,3,1],[1,1,3,2,3,2,3,2,3,1]]$/;"	v
+beta	sample.py	/^        beta = copy.deepcopy(beta_new)$/;"	v
+beta	sample.py	/^    beta= [beta_0,beta_1,beta_2,beta_3,beta_4,beta_5]$/;"	v
+beta_0	sample.py	/^    beta_0 = [0]$/;"	v
+beta_1	sample.py	/^    beta_1 = [0]$/;"	v
+beta_2	sample.py	/^    beta_2 = [stats.norm.rvs(loc=2,scale=0.5,size=1)[0]]$/;"	v
+beta_3	sample.py	/^    beta_3 = [0]$/;"	v
+beta_4	sample.py	/^    beta_4 = [0]$/;"	v
+beta_5	sample.py	/^    beta_5 = [0]$/;"	v
+beta_new	backup/sample copy.py	/^		beta_new = UpdateBeta(phi_new,varphi,T)$/;"	v
+beta_new	sample.py	/^        beta_new = UpdateBeta(phi_new,varphi_new,T)$/;"	v
+beta_old	backup/sample copy.py	/^		beta_old = copy.deepcopy(beta_new)$/;"	v
+beta_old	backup/sample copy.py	/^	beta_old = [1,1,1,1,1,1,1,1,1,1]$/;"	v
+cont	sample.py	/^        cont =1000$/;"	v
+cont	sample.py	/^    cont = 1000$/;"	v
+cont	sample.py	/^    cont =1000$/;"	v
+copy	backup/sample copy.py	/^import copy$/;"	i
+copy	sample.py	/^import copy$/;"	i
+eta	backup/sample copy.py	/^	eta = 0.75$/;"	v
+eta	sample.py	/^    eta = random.uniform(0.5,1)$/;"	v
+eta_sigma	backup/sample copy.py	/^	eta_sigma = 0.75$/;"	v
+eta_sigma	sample.py	/^    eta_sigma = random.uniform(0.5,1)$/;"	v
+flag	sample.py	/^                flag = 0$/;"	v
+flag	sample.py	/^                flag =1$/;"	v
+flag	sample.py	/^            flag = 0$/;"	v
+flag	sample.py	/^            flag =1$/;"	v
+flag	sample.py	/^        flag =1$/;"	v
+flag	sample.py	/^    flag = 1$/;"	v
+fy	sample.py	/^            fy = v_random*(0.5+v_random)**(-4)$/;"	v
+fy	sample.py	/^        fy = (1+v_random)**(-1.5)$/;"	v
+fy	sample.py	/^        fy = (v_random+2*b_star)**(-3)$/;"	v
+gy	sample.py	/^            gy = np.exp(-1.0*v_random)$/;"	v
+gy	sample.py	/^        gy = np.exp(-1.0*v_random)$/;"	v
+iterNum	backup/sample copy.py	/^		iterNum = ii+1$/;"	v
+iterNum	sample.py	/^        iterNum = ii +1$/;"	v
+k_old	backup/sample copy.py	/^		k_old = copy.deepcopy(k_new)$/;"	v
+k_old	backup/sample copy.py	/^	k_old = [2,1,4,1,2,1,4,1,1,1]$/;"	v
+k_old	sample.py	/^        k_old = copy.deepcopy(k_new)$/;"	v
+k_old	sample.py	/^    k_old = []$/;"	v
+k_old_temp	sample.py	/^    k_old_temp = []$/;"	v
+k_per_row	sample.py	/^    k_per_row = []$/;"	v
+k_sigma	backup/sample copy.py	/^		k_sigma = copy.deepcopy(k_sigma_new)$/;"	v
+k_sigma	backup/sample copy.py	/^	k_sigma = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]$/;"	v
+k_sigma	sample.py	/^        k_sigma = copy.deepcopy(k_sigma_new)$/;"	v
+k_sigma	sample.py	/^    k_sigma = random.uniform(0,1)$/;"	v
+lambda_new	backup/sample copy.py	/^		lambda_new = np.exp(xi_new[0])$/;"	v
+lambda_new	sample.py	/^        lambda_new = np.exp(zip(*xi_new)[0])$/;"	v
+lambda_old	backup/sample copy.py	/^		lambda_old = copy.deepcopy(lambda_new)$/;"	v
+lambda_old	backup/sample copy.py	/^	lambda_old = 1$/;"	v
+lambda_old	sample.py	/^        lambda_old = copy.deepcopy(lambda_new)$/;"	v
+lambda_old	sample.py	/^    lambda_old = 2$/;"	v
+lambda_old	sample.py	/^    lambda_old = []$/;"	v
+lambda_sigma	backup/sample copy.py	/^		lambda_sigma=copy.deepcopy(lambda_sigma_new)$/;"	v
+lambda_sigma	backup/sample copy.py	/^	lambda_sigma = 1.0$/;"	v
+lambda_sigma	sample.py	/^        lambda_sigma=copy.deepcopy(lambda_sigma_new)$/;"	v
+lambda_sigma	sample.py	/^    lambda_sigma = stats.gamma.rvs(3,scale= 1,size=1)[0]$/;"	v
+lambda_sigma_new	backup/sample copy.py	/^		lambda_sigma_new = np.exp(xi_sigma_new[0])$/;"	v
+lambda_sigma_new	sample.py	/^        lambda_sigma_new = np.exp(xi_sigma_new[0])$/;"	v
+lambda_star	backup/sample copy.py	/^	lambda_star = 2$/;"	v
+lambda_star	sample.py	/^        lambda_star = copy.deepcopy(lambda_star_new)$/;"	v
+lambda_star	sample.py	/^    lambda_star =  stats.expon.rvs(scale=s_star,size=1)[0]$/;"	v
+m	backup/sample copy.py	/^	m = len(x)-1$/;"	v
+m	backup/sample copy.py	/^	m =5$/;"	v
+m	sample.py	/^    m = 5$/;"	v
+math	backup/sample copy.py	/^import math$/;"	i
+math	sample.py	/^import math$/;"	i
+mul_var	sample.py	/^        mul_var = stats.multivariate_normal(mean=[0,0,0,0,0],cov=np.identity(5))$/;"	v
+mul_var_rvs	sample.py	/^        mul_var_rvs = mul_var.rvs(1)$/;"	v
+np	backup/sample copy.py	/^import numpy as np$/;"	i
+np	sample.py	/^import numpy as np$/;"	i
+phi_old	backup/sample copy.py	/^		phi_old = copy.deepcopy(phi_new)$/;"	v
+phi_old	backup/sample copy.py	/^	phi_old = [1,1,1,1,1,1,1,1,1,1]$/;"	v
+phi_old	sample.py	/^        phi_old = copy.deepcopy(phi_new)$/;"	v
+phi_old	sample.py	/^    phi_old = []$/;"	v
+phi_old_temp	sample.py	/^    phi_old_temp = []$/;"	v
+random	backup/sample copy.py	/^import random$/;"	i
+random	sample.py	/^import random$/;"	i
+rou	backup/sample copy.py	/^		rou = copy.deepcopy(rou_new)$/;"	v
+rou	backup/sample copy.py	/^	rou = 0.99$/;"	v
+rou_new	backup/sample copy.py	/^		rou_new = np.exp(xi_new[2])\/(np.exp(xi_new[2])+1)$/;"	v
+rou_new	sample.py	/^        rou_new = np.exp(zip(*xi_new)[2])\/(np.exp(zip(*xi_new)[2])+1)$/;"	v
+rou_old	sample.py	/^        rou_old = copy.deepcopy(rou_new)$/;"	v
+rou_old	sample.py	/^    rou_old = []$/;"	v
+rou_sigma	backup/sample copy.py	/^		rou_sigma = copy.deepcopy(rou_sigma_new)$/;"	v
+rou_sigma	backup/sample copy.py	/^	rou_sigma = 0.95$/;"	v
+rou_sigma	sample.py	/^        rou_sigma = copy.deepcopy(rou_sigma_new)$/;"	v
+rou_sigma	sample.py	/^    rou_sigma = stats.beta.rvs(38,2.0,size=1)[0]$/;"	v
+rou_sigma_new	backup/sample copy.py	/^		rou_sigma_new =np.exp(xi_sigma_new[2])$/;"	v
+rou_sigma_new	sample.py	/^        rou_sigma_new =np.exp(xi_sigma_new[2])$/;"	v
+s_star	backup/sample copy.py	/^	s_star =2$/;"	v
+s_star	sample.py	/^    s_star = 0.1$/;"	v
+s_xi_old	backup/sample copy.py	/^	s_xi_old = [1,1,1,1]$/;"	v
+s_xi_old	sample.py	/^    s_xi_old = [1,1,1,1,1,1]$/;"	v
+s_xi_sigma_old	backup/sample copy.py	/^	s_xi_sigma_old = [1,1,1]$/;"	v
+s_xi_sigma_old	sample.py	/^    s_xi_sigma_old = 1$/;"	v
+scipy	backup/sample copy.py	/^import scipy.special as spec$/;"	i
+scipy	sample.py	/^import scipy.special as spec$/;"	i
+sigma	sample.py	/^    sigma = 1$/;"	v
+sigma_square	backup/sample copy.py	/^		sigma_square = UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma)$/;"	v
+spec	backup/sample copy.py	/^import scipy.special as spec$/;"	i
+spec	sample.py	/^import scipy.special as spec$/;"	i
+stats	backup/sample copy.py	/^from scipy import stats$/;"	i
+stats	sample.py	/^from scipy import stats$/;"	i
+tao	backup/sample copy.py	/^	tao = 0.8$/;"	v
+tao_lambda_star	sample.py	/^        tao_lambda_star = copy.deepcopy(tao_lambda_star_new)$/;"	v
+tao_lambda_star	sample.py	/^    tao_lambda_star = 0.95$/;"	v
+tao_lambda_star_new	sample.py	/^        tao_lambda_star_new = UpdateLambda(lambda_star,tao_lambda_star,s_star,u_star_new,m,u_new,eta,alpha_hat,iterNum)$/;"	v
+tao_phi_old	backup/sample copy.py	/^		tao_phi_old = copy.deepcopy(tao_phi_new)$/;"	v
+tao_phi_old	backup/sample copy.py	/^	tao_phi_old = [1,1,1,1,1,1,1,1,1,1]$/;"	v
+tao_phi_old	sample.py	/^        tao_phi_old = copy.deepcopy(tao_phi_new)$/;"	v
+tao_phi_old	sample.py	/^    tao_phi_old = 0.3*np.ones((m+1,T),dtype=np.int16)$/;"	v
+tao_u_star	sample.py	/^        tao_u_star = copy.deepcopy(tao_u_star_new)$/;"	v
+tao_u_star	sample.py	/^    tao_u_star = 1$/;"	v
+temp_k	sample.py	/^            temp_k = stats.poisson.rvs(rou_old[ii]*lambda_old[ii]*phi_old[ii][-1]\/(u[ii]*(1-rou_old[ii])),size=1)[0]$/;"	v
+temp_k_init	sample.py	/^        temp_k_init = []$/;"	v
+temp_phi	sample.py	/^            temp_phi = stats.gamma.rvs(lambda_old[ii]+k_old[ii][-1],scale=1.0\/(lambda_old[ii]\/(u[ii]*(1-rou_old[ii]))),size=1)[0]  $/;"	v
+temp_phi_init	sample.py	/^        temp_phi_init = []$/;"	v
+temp_u	sample.py	/^        temp_u = stats.gamma.rvs(lambda_star,scale = 1.0\/(lambda_star\/u_star),size=1)[0]$/;"	v
+temp_x	sample.py	/^        temp_x = [1]$/;"	v
+temp_x_list	sample.py	/^    temp_x_list= []$/;"	v
+temp_z_old	sample.py	/^        temp_z_old = []$/;"	v
+u	backup/sample copy.py	/^		u = copy.deepcopy(u_new)$/;"	v
+u	backup/sample copy.py	/^	u = 1$/;"	v
+u	sample.py	/^        u = copy.deepcopy(u_new)$/;"	v
+u	sample.py	/^    u = []$/;"	v
+u_i	backup/sample copy.py	/^	u_i = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]$/;"	v
+u_new	backup/sample copy.py	/^		u_new = np.exp(xi_new[1])$/;"	v
+u_new	sample.py	/^        u_new = np.exp(zip(*xi_new)[1])$/;"	v
+u_random	sample.py	/^        u_random = random.uniform(0,1)$/;"	v
+u_ranom	sample.py	/^            u_ranom = random.uniform(0,1)$/;"	v
+u_ranom	sample.py	/^        u_ranom =random.uniform(0,1)$/;"	v
+u_sigma	backup/sample copy.py	/^		u_sigma = copy.deepcopy(u_sigma_new)$/;"	v
+u_sigma	backup/sample copy.py	/^	u_sigma = 2.0$/;"	v
+u_sigma	sample.py	/^            u_sigma = v_random$/;"	v
+u_sigma	sample.py	/^        u_sigma = copy.deepcopy(u_sigma_new)$/;"	v
+u_sigma	sample.py	/^    u_sigma = 0$/;"	v
+u_sigma_new	backup/sample copy.py	/^		u_sigma_new = np.exp(xi_sigma_new[1])$/;"	v
+u_sigma_new	sample.py	/^        u_sigma_new = np.exp(xi_sigma_new[1])$/;"	v
+u_star	backup/sample copy.py	/^	u_star =1.2$/;"	v
+u_star	sample.py	/^            u_star = v_random$/;"	v
+u_star	sample.py	/^        u_star= copy.deepcopy(u_star_new)$/;"	v
+u_star	sample.py	/^    u_star = 0$/;"	v
+u_star_old	backup/sample copy.py	/^	u_star_old = 2$/;"	v
+v_random	sample.py	/^            v_random = stats.gamma.rvs(1,size=1)[0]$/;"	v
+v_random	sample.py	/^        v_random = stats.gamma.rvs(1,size=1)[0]$/;"	v
+varphi	backup/sample copy.py	/^		varphi =copy.deepcopy(varphi_new)$/;"	v
+varphi	backup/sample copy.py	/^	varphi = 0.99$/;"	v
+varphi_new	backup/sample copy.py	/^		varphi_new = np.exp(xi_new[3])\/(np.exp(xi_new[3])+1)$/;"	v
+varphi_new	sample.py	/^        varphi_new = np.exp(zip(*xi_new)[3])\/(np.exp(zip(*xi_new)[3])+1)$/;"	v
+varphi_old	sample.py	/^        varphi_old =copy.deepcopy(varphi_new)$/;"	v
+varphi_old	sample.py	/^    varphi_old = []$/;"	v
+x	backup/sample copy.py	/^	x = [[1,2,3,2,3,2,3,2,3,1],[2,3,4,2,3,2,3,2,3,1],[5,3,1,2,3,2,3,2,3,1],[1,1,3,2,3,2,3,2,3,1]]$/;"	v
+x	sample.py	/^    x = map(list,zip(*temp_x_list))$/;"	v
+xi_old	backup/sample copy.py	/^	xi_old = [[1,1,1,1]]$/;"	v
+xi_old	sample.py	/^    xi_old  = list(np.random.random((100,6,4)))$/;"	v
+xi_sigma_old	backup/sample copy.py	/^	xi_sigma_old = [[1,1,1]]$/;"	v
+xi_sigma_old	sample.py	/^    xi_sigma_old = list(np.random.random((100,3)))$/;"	v
+y	backup/sample copy.py	/^	y = [1,2,3,3,2,1,1,2,3,2]$/;"	v
+y	sample.py	/^    y= []$/;"	v
+y_ii	sample.py	/^            y_ii = y_ii + x[jj][ii]*beta[jj][ii]$/;"	v
+y_ii	sample.py	/^        y_ii = stats.norm.rvs(scale =sigma ,size=1)[0]$/;"	v
+z_old	backup/sample copy.py	/^		z_old = copy.deepcopy(z_new)$/;"	v
+z_old	backup/sample copy.py	/^	z_old = [1,1,1,1,1,1,1,1,1,1]$/;"	v
+z_old	sample.py	/^        z_old = copy.deepcopy(z_new)$/;"	v
+z_old	sample.py	/^    z_old = []$/;"	v
+z_sigma_old	backup/sample copy.py	/^		z_sigma_old = copy.deepcopy(z_sigma_new)$/;"	v
+z_sigma_old	backup/sample copy.py	/^	z_sigma_old = [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]$/;"	v
+z_sigma_old	sample.py	/^        z_sigma_old = copy.deepcopy(z_sigma_new)$/;"	v
+z_sigma_old	sample.py	/^    z_sigma_old = []$/;"	v
