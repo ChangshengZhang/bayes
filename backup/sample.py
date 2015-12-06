@@ -637,7 +637,7 @@ def UpdateLambda(lambda_star_old,tao_lambda_star_old,s_star,u_star,m,u,eta,alpha
     log_tao_lambda_star = np.log(tao_lambda_star_old)+iterNum**(-1.0*eta)*(ap-alpha)
     tao_lambda_star_new = np.exp(log_tao_lambda_star)
 
-    print "finished a iteration."
+    #print "finished a iteration."
     return lambda_star_new,tao_lambda_star_new
 
 # Plot 某一次的beta
@@ -695,12 +695,14 @@ if __name__ =='__main__':
         beta_5.append(0)
     beta= [beta_0,beta_1,beta_2,beta_3,beta_4,beta_5]
     beta_list = []
+    
+    PlotBeta(beta_list)
 
     lambda_old = 2
     alpha_hat = 0.3
     alpha_hat_sigma = 0.3
     sigma = 1
-    total_iter_num = 15000
+    total_iter_num = 10000
     #y
     y= []
     for ii in range(T):
@@ -778,23 +780,23 @@ if __name__ =='__main__':
     for ii in range(total_iter_num):
         print "It is the "+str(ii) + " 's iteration." 
         iterNum = ii +1
-        print "update phi:"
+        #print "update phi:"
         phi_new,tao_phi_new = UpdatePhi(phi_old,tao_phi_old,lambda_old,k_old,beta,u,rou_old,varphi_old,iterNum,eta,alpha_hat,T)
-        print "update kappa:"
+        #print "update kappa:"
         k_new,z_new = UpdateK(k_old,z_old,T,lambda_old,rou_old,u,phi_new,alpha_hat,iterNum,eta)
         #print"k_new:"
         #print "update sgima^2"
-        print "update sigma square:"
+        #print "update sigma square:"
         temp_sigma,sigma_square = UpdateSigma(x,y,T,beta,rou_sigma,u_sigma,lambda_sigma,k_sigma)
         #print temp_sigma
-        print "update kappa^{sgima}:"
+        #print "update kappa^{sgima}:"
         k_sigma_new,z_sigma_new = UpdateK_sigma(k_sigma,z_sigma_old,lambda_sigma,rou_sigma,u_sigma,sigma_square,iterNum,eta,alpha_hat,T)
 
         #2.5
         #xi_new is 2-dim
         # xi_sigma_new is 1-dim s_xi_new is 1-dim, either
         # s_xi_sigma_new is const
-        print "update theta,beta:"
+        #print "update theta,beta:"
         xi_new,xi_sigma_new,s_xi_new,s_xi_sigma_new,beta_new = UpdateTheta(u_star,lambda_star,alpha_hat,alpha_hat_sigma,iterNum,eta,eta_sigma,temp_sigma,k_sigma_new,beta,lambda_old,u,rou_old,varphi_old,xi_old,s_xi_old,lambda_sigma,u_sigma,rou_sigma,xi_sigma_old,s_xi_sigma_old,phi_new,k_new,x,y)
         #还原 xi 到变量中
         # xi_new 是二维数组
@@ -808,15 +810,15 @@ if __name__ =='__main__':
         lambda_sigma_new = np.exp(xi_sigma_new[0])
         u_sigma_new = np.exp(xi_sigma_new[1])
         rou_sigma_new =np.exp(xi_sigma_new[2])/(np.exp(xi_sigma_new[2])+1)
-        print "update u_star:" 
+        #print "update u_star:" 
         # u_i 不等于 u，u_i是2.5得到的
         u_star_new, tao_u_star_new = UpdateU_star(u_star,tao_u_star,b_star,lambda_star,m,iterNum,eta,alpha_hat)
-        print "update lambda_star:"
+        #print "update lambda_star:"
         lambda_star_new,tao_lambda_star_new = UpdateLambda(lambda_star,tao_lambda_star,s_star,u_star_new,m,u_new,eta,alpha_hat,iterNum)
 
         #在这里更新变量
         #deepcopy
-        print "update old varible:"
+        #print "update old varible:"
         phi_old = copy.deepcopy(phi_new)
         tao_phi_old = copy.deepcopy(tao_phi_new)
         lambda_old = copy.deepcopy(lambda_new)
