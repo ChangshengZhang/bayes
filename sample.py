@@ -651,8 +651,7 @@ def PlotBeta(beta):
         plt.title("Beta")
     plt.show()
 
-if __name__ =='__main__':
-    
+def RunIteration(x,y,mumean1b,mulambdastar,burnin,numbofits,every):  
     starttime = datetime.datetime.now()
 
     #初始值
