@@ -637,12 +637,16 @@ class NGAR():
 
     def Chol(self,matrix):
         check = 0
+        chol_star = []
         if matrix.shape[0] ==0:
             chol_star = []
             check =1
         else:
-            chol_star = np.linalg.cholesky(matrix)
-
+            try:
+                chol_star = np.linalg.cholesky(matrix)
+                check = 0
+            except:
+                check =1
         return chol_star,check
 
     def UpdateMuStar(self,it):
