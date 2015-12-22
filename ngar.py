@@ -146,7 +146,7 @@ class NGAR():
             self.UpdateMuStar(it)
             self.UpdateLambdaStar(it)
             self.UpdateOutput(it,self.burnin,self.every)
-            if it% 100==0:
+            if it% 1000==0:
                 end_time = datetime.datetime.now()
                 print (end_time-start_time).seconds
                 time.sleep(5)
@@ -472,10 +472,6 @@ class NGAR():
                 else:
                     sxx = np.array([[self.sum_2[0][jj],self.sum_2[1][jj],self.sum_2[3][jj],self.sum_2[6][jj]],[self.sum_2[1][jj],self.sum_2[2][jj],self.sum_2[4][jj],self.sum_2[7][jj]],[self.sum_2[3][jj],self.sum_2[4][jj],self.sum_2[5][jj],self.sum_2[8][jj]],[self.sum_2[6][jj],self.sum_2[7][jj],self.sum_2[8][jj],self.sum_2[9][jj]]])
 
-                    print "sxx"
-                    print sxx
-                    print np.asarray(np.asmatrix(self.sum_1[:,jj]).T*np.asmatrix(self.sum_1[:,jj]))
-
                     var_star_1 = (sxx-np.asarray(np.asmatrix(self.sum_1[:,jj]).T*np.asmatrix(self.sum_1[:,jj]))/(it-self.start_samples))/(it-self.start_samples-1)
                     print var_star_1
                     new_xi_star = xi_star + np.dot(np.linalg.cholesky(np.exp(self.log_scale[jj])*var_star_1),np.random.normal(size=4))
@@ -575,11 +571,6 @@ class NGAR():
                     self.log_scale[jj] = self.log_scale[jj] + 1.0/(it-99)**0.55*(accept-0.3)
 
 
-        print "lambda sd:",self.log_lambda_sd
-        #print "mean sd:",self.log_mean_sd
-        #print "rho sd:",self.log_rho_sd
-        #print "beta sd:",self.log_rho_beta_sd
-
         if it >= self.start_samples:
             x0 = np.log(self.lambda_)
             x1 = np.log(self.mu)
@@ -655,8 +646,6 @@ class NGAR():
         log_accept = log_accept-self.lambda_star*(1.0/new_mu_star-1/self.mu_star)*sum(self.mu[1:])
         log_accept = log_accept +np.log(new_mu_star)-np.log(self.mu_star)-3*np.log(new_mu_star+self.mu_mean)+3*np.log(self.mu_star+self.mu_mean)
 
-        print "log_accept",log_accept
-        print "new mu star" ,new_mu_star
         accept = 1
         if np.isnan(log_accept) or np.isinf(log_accept):
             accept =0
@@ -670,9 +659,6 @@ class NGAR():
         new_mu_gammma_sd = self.mu_gamma_sd +1.0/it**0.5*(accept-0.3)
         if new_mu_gammma_sd > 10**(-3) and  new_mu_gammma_sd <10**3:
             self.mu_gamma_sd = new_mu_gammma_sd
-
-        print "mu gamma sd",self.mu_gamma_sd
-        print "mu star:",self.mu_star
 
     def UpdateLambdaStar(self,it):
         new_lambda_star = self.lambda_star*np.exp(self.v_gamma_sd*np.random.normal())
@@ -695,8 +681,6 @@ class NGAR():
         if new_gamma_sd >10**(-0.3) and new_gamma_sd <10**3:
             self.v_gamma_sd = new_gamma_sd
 
-        print "lambda_star:",self.lambda_star
-
     def UpdateOutput(self,it,burnin,every):
         if it > burnin and (it-burnin)%every ==0:
             self.hold_beta.append(self.beta)
@@ -710,6 +694,8 @@ class NGAR():
             self.hold_mu_sigma.append(self.mu_sigma)
             self.hold_rho_sigma.append(self.rho_sigma)
             self.hold_mu_star.append(self.mu_star)
+
+            print self.beta
 
     def LoadData(self,x_path,y_path):
         x_origin_list = sio.loadmat(x_path)['data']
