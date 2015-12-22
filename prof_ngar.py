@@ -131,9 +131,10 @@ class NGAR():
 
         #注意，迭代次数的下标是从1开始
         for it in range(1,self.number_of_iteration+1):
+            if it ==10:
+                break
             # iteration
-            if it%20==0:
-                print "start %s th iteration:\n" %it
+            print "start %s th iteration:\n" %it
             if self.check_star ==1:
                 # run iteration
                 self.UpdatePsi(it)
@@ -144,9 +145,10 @@ class NGAR():
             self.UpdateMuStar(it)
             self.UpdateLambdaStar(it)
             self.UpdateOutput(it,self.burnin,self.every)
-            if it% 500==0:
+            if it% 1000==0:
                 end_time = datetime.datetime.now()
                 print (end_time-start_time).seconds
+                time.sleep(5)
 
         print "done."
 
@@ -494,7 +496,6 @@ class NGAR():
 
                         old_lam = kappa_star[ii-1][counter]+ self.lambda_[jj]
                         old_gam = self.delta[jj] + self.lambda_[jj]/self.mu[jj]
-                        
                         new_lam = new_kappa_star[ii-1][counter] + new_lambda
                         new_gam = new_delta + new_lambda/new_mu
 
@@ -665,10 +666,12 @@ class NGAR():
             self.hold_mu.append(self.mu)
             self.hold_rho.append(self.rho)
             self.hold_rho_beta.append(self.rho_beta)
-            self.hold_lambda_sigma.append(self.lambda_sigma)
+            self.hold_lambda_sigma.appen(self.lambda_sigma)
             self.hold_mu_sigma.append(self.mu_sigma)
             self.hold_rho_sigma.append(self.rho_sigma)
             self.hold_mu_star.append(self.mu_star)
+
+            print self.beta
 
     def LoadData(self,x_path,y_path):
         x_origin_list = sio.loadmat(x_path)['data']
@@ -692,4 +695,11 @@ if __name__ == "__main__":
     x_path = "data/GDP_data.mat"
     y_path = "data/GDP_target.mat"
     
-    gdp_case = NGAR(x_path,y_path,0.1,0.1,2000,5000,5)
+    import profile
+
+    profile.run("case = NGAR(x_path,y_path,0.1,0.1,2000,5000,5)", "prof.txt")
+    import pstats
+    p = pstats.Stats("prof.txt")
+    p.sort_stats("time").print_stats()
+
+    #gdp_case = NGAR(x_path,y_path,0.1,0.1,2000,5000,5)
