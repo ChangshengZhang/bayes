@@ -10,7 +10,6 @@
 import numpy as np
 import copy
 import scipy.io as sio
-import scipy.special as spec
 import math
 import random
 import datetime
@@ -261,15 +260,15 @@ class NGAR():
                 else:
                     lam1 = self.lambda_[jj] + self.kappa[ii][jj]
                     gam1 = self.lambda_[jj]/self.mu[jj] + self.delta[jj]
-                    loglike = lam1*np.log(gam1) - np.log(spec.gamma(lam1))+(lam1-1)*np.log(self.psi[ii+1][jj])
+                    loglike = lam1*np.log(gam1) - math.lgamma(lam1)+(lam1-1)*np.log(self.psi[ii+1][jj])
                     pnmean = self.psi[ii][jj] + new_kappa
-                    loglike = loglike + self.kappa[ii][jj]*np.log(pnmean)- np.log(spec.gamma(self.kappa[ii][jj]+1))
+                    loglike = loglike + self.kappa[ii][jj]*np.log(pnmean)- math.lgamma(self.kappa[ii][jj]+1)
 
                     lam1 = self.lambda_[jj]+ new_kappa
                     gam1 = self.lambda_[jj]/self.mu[jj] + self.delta[jj]
-                    new_loglike = lam1*np.log(gam1) - np.log(spec.gamma(lam1))+(lam1-1)*np.log(self.psi[ii+1][jj])
+                    new_loglike = lam1*np.log(gam1) - math.lgamma(lam1)+(lam1-1)*np.log(self.psi[ii+1][jj])
                     pnmean = self.psi[ii][jj]*self.delta[jj]
-                    new_loglike = new_loglike + new_kappa*np.log(pnmean)-np.log(spec.gamma(new_kappa+1))
+                    new_loglike = new_loglike + new_kappa*np.log(pnmean)-math.lgamma(new_kappa+1)
                     log_accept = new_loglike - loglike
                     accept =1
                     if np.isnan(log_accept) or np.isinf(log_accept):
@@ -325,15 +324,15 @@ class NGAR():
             else:
                 lam1 = self.lambda_sigma + self.kappa_sigma_sq[ii]
                 gam1 = self.lambda_sigma/self.mu_sigma + self.rho_sigma/(1-self.rho_sigma)*self.lambda_sigma/self.mu_sigma
-                loglike = lam1*np.log(gam1)-np.log(spec.gamma(lam1))+(lam1-1)*np.log(self.sigma_sq[ii+1])
+                loglike = lam1*np.log(gam1)-math.lgamma(lam1)+(lam1-1)*np.log(self.sigma_sq[ii+1])
                 pnmean = self.sigma_sq[ii]*self.rho_sigma/(1-self.rho_sigma)*self.lambda_sigma/self.mu_sigma
-                loglike = loglike + self.kappa_sigma_sq[ii]*np.log(pnmean)- np.log(spec.gamma(self.kappa_sigma_sq[ii])+1)
+                loglike = loglike + self.kappa_sigma_sq[ii]*np.log(pnmean)- math.lgamma(self.kappa_sigma_sq[ii]+1)
 
                 lam1 = self.lambda_sigma + new_kappa_sigma_sq
                 gam1 = self.lambda_sigma/self.mu_sigma + self.rho_sigma/(1-self.rho_sigma)*self.lambda_sigma/self.mu_sigma
-                new_loglike = lam1*np.log(gam1)-np.log(spec.gamma(lam1))+(lam1-1)*np.log(self.sigma_sq[ii+1])
+                new_loglike = lam1*np.log(gam1)-math.lgamma(lam1)+(lam1-1)*np.log(self.sigma_sq[ii+1])
                 pnmean = self.sigma_sq[ii]*self.rho_sigma/(1-self.rho_sigma)*self.lambda_sigma/self.mu_sigma
-                new_loglike = new_loglike + new_kappa_sigma_sq*np.log(pnmean)-np.log(spec.gamma(new_kappa_sigma_sq+1))
+                new_loglike = new_loglike + new_kappa_sigma_sq*np.log(pnmean)-math.lgamma(new_kappa_sigma_sq+1)
                 log_accept = new_loglike - loglike
                 accept =1
                 if np.isnan(log_accept) or np.isinf(log_accept):
@@ -494,7 +493,7 @@ class NGAR():
 
                         old_lam = kappa_star[ii-1][counter]+ self.lambda_[jj]
                         old_gam = self.delta[jj] + self.lambda_[jj]/self.mu[jj]
-                        
+
                         new_lam = new_kappa_star[ii-1][counter] + new_lambda
                         new_gam = new_delta + new_lambda/new_mu
 
@@ -638,7 +637,7 @@ class NGAR():
     def UpdateLambdaStar(self,it):
         new_lambda_star = self.lambda_star*np.exp(self.v_gamma_sd*np.random.normal())
         log_accept = (self.p-1)*(new_lambda_star*np.log(new_lambda_star/self.mu_star)-self.lambda_star*np.log(self.lambda_star/self.mu_star))
-        log_accept = log_accept -(self.p-1)*(np.log(spec.gamma(new_lambda_star))-np.log(spec.gamma(self.lambda_star)))
+        log_accept = log_accept -(self.p-1)*(math.lgamma(new_lambda_star)-math.lgamma(self.lambda_star))
         log_accept = log_accept +(new_lambda_star-self.lambda_star)*sum(np.log(self.mu[1:]))-(new_lambda_star-self.lambda_star)/self.mu_star*sum(self.mu[1:])
         log_accept = log_accept +np.log(new_lambda_star)-np.log(self.lambda_star)-1.0/self.mu_lambda_star*(new_lambda_star-self.lambda_star)
         accept =1
@@ -691,5 +690,5 @@ if __name__ == "__main__":
 
     x_path = "data/GDP_data.mat"
     y_path = "data/GDP_target.mat"
-    
+
     gdp_case = NGAR(x_path,y_path,0.1,0.1,2000,5000,5)
