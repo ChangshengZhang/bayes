@@ -147,6 +147,20 @@ class NGAR():
                 end_time = datetime.datetime.now()
                 print (end_time-start_time).seconds
 
+            if  it%20 ==0:
+                print "psi\n"
+                print self.psi
+                print "kappa\n"
+                print self.kappa
+                print "sigma_sq\n"
+                print self.sigma_sq
+                print "lambda\n"
+                print self.lambda_
+                print "rho\n"
+                print self.rho
+                print "\n"
+                time.sleep(10)
+
         print "done."
 
     def KalmanFilter(self,x_list,y_list,psi,sigma_sq,rho_beta):
@@ -487,7 +501,16 @@ class NGAR():
                         new_mean = new_delta*new_psi_star[ii-1][counter]
 
                         if new_mean > old_mean:
-                            new_kappa_star[ii-1][counter] = kappa_star[ii-1][counter]+np.random.poisson(new_mean-old_mean)
+                            try:
+                                new_kappa_star[ii-1][counter] = kappa_star[ii-1][counter]+np.random.poisson(new_mean-old_mean)
+                            except:
+                                print new_mean
+                                print old_mean
+                                print self.delta[jj]
+                                print new_delta
+                                print psi_star[ii-1][counter]
+                                print new_psi_star[ii-1][counter]
+
                         else:
                             new_kappa_star[ii-1][counter] = np.random.binomial(kappa_star[ii-1][counter],1.0*new_mean/old_mean)
 
@@ -668,6 +691,8 @@ class NGAR():
             self.hold_mu_sigma.append(self.mu_sigma)
             self.hold_rho_sigma.append(self.rho_sigma)
             self.hold_mu_star.append(self.mu_star)
+
+
 
     def LoadData(self,x_path,y_path):
         x_origin_list = sio.loadmat(x_path)['data']
